@@ -1,9 +1,8 @@
 cmake_minimum_required (VERSION 3.1)
 
-INCLUDE(CheckIncludeFiles)
+include(CheckIncludeFiles)
 
-
-project (libretracker)
+project(libretracker)
 
 
 ### enable / disable OpenCL and Labstreaming layer ###
@@ -27,10 +26,10 @@ endif ()
 ### define the required libraries ################
 
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/eigen)
 # cmake doesnt know how to deal with Eigen3 under Windows, so search only under linux / unix for eigen 3...
 if (UNIX)
-	find_package(OpenCV REQUIRED)
-	find_package(Eigen3 REQUIRED)
+	find_package(OpenCV REQUIRED core imgproc imgcodecs highgui videoio calib3d)
 	set(FLTK_SKIP_FLUID true)
 	find_package(FLTK REQUIRED)
 
@@ -43,7 +42,6 @@ if (UNIX)
 else ()
 	# under windows (and using cmake-gui), ask the user to enter the path to the headers and lib files.
 	set(OPENCV_INCLUDE_DIR "enter path" CACHE STRING "please enter here the path to the eigen3 include directory")
-	set(EIGEN3_INCLUDE_DIR "enter path" CACHE STRING "please enter here the path to the OpenCV include directory")
 	set(FLTK_INCLUDE_DIR "enter path" CACHE STRING "please enter here the path to the FLTK include directory")
 	
 	set(FLTK_LIBRARIES "enter path" CACHE STRING "please enter here the path to the FLTK library directory")
@@ -113,11 +111,13 @@ endif()
 
 
 add_executable(libretracker ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/eigen")
+target_include_directories(${PROJECT_NAME} PRIVATE "${OpenCV_INCLUDE_DIRS}")
 
 # add_compile_options("-std=c++14")
 # target_compile_features(libretracker PUBLIC cxx_std_14) # this is the better way
 
-target_link_libraries(libretracker ${FLTK_LIBRARIES} GL pthread ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} ${FLTK_LIBRARIES} GL pthread ${OpenCV_LIBRARIES})
 
 if (OPENCL_ENABLED)
 	#target_link_libraries(${Boost_LIBRARIES}) # not really required here, because only "header-only libs" are used in this project
