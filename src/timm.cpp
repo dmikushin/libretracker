@@ -1,17 +1,18 @@
 #include "timm.h"
+#include "timing.h"
 
 #include <queue>
 #include <iostream>
 #include <opencv2/highgui/highgui.hpp>
 
-
 cv::Point Timm::pupil_center(const cv::Mat& eye_img)
 {
+	double t1; get_time(&t1);
 
 	pre_process(eye_img);
 
 	//*
-	timer2.tick(); 
+	double t1b; get_time(&t1b);
 	#ifdef _WIN32
 	_ReadWriteBarrier();
 	#endif
@@ -65,7 +66,8 @@ cv::Point Timm::pupil_center(const cv::Mat& eye_img)
 	#ifdef _WIN32
 	_ReadWriteBarrier(); // to avoid instruction reordering - important for accurate timings
 	#endif
-	measure_timings[1] = timer2.tock(false);
+	double t2b; get_time(&t2b);
+	measure_timings[1] = t2b - t1b;
 	//*/
 
 
@@ -87,7 +89,12 @@ cv::Point Timm::pupil_center(const cv::Mat& eye_img)
 	_ReadWriteBarrier(); measure_timings[1] = timer2.tock(false);
 	//*/
 
-	return undo_scaling(post_process(), eye_img.cols);
+	cv::Point result = undo_scaling(post_process(), eye_img.cols);
+
+	double t2; get_time(&t2);
+	measure_timings[0] = t2 - t1;
+	
+	return result;
 }
 
 
@@ -130,7 +137,6 @@ float Timm::calc_dynamic_threshold(const cv::Mat &mat, float stdDevFactor)
 
 void Timm::pre_process(const cv::Mat& img)
 {
-	timer1.tick(); 
 	#ifdef _WIN32
 	_ReadWriteBarrier();
 	#endif
@@ -234,7 +240,6 @@ cv::Point Timm::post_process()
 	#ifdef _WIN32
 	_ReadWriteBarrier(); 
 	#endif
-	measure_timings[0] = timer1.tock(false);
 	return max_point;
 }
 

@@ -64,8 +64,6 @@ protected:
 	cv::Mat debug_img1;
 	cv::Mat debug_img2;
 
-	Timer timer1, timer2;
-
 	// storage for threads used by pupil_center	
 	std::vector<std::thread> threads;
 public:
