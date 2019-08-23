@@ -3,17 +3,10 @@
 #include <random>
 
 using namespace cv;
+using namespace std;
 
 PupilTracker::PupilTracker()
 {
-#ifdef USE_OPENCL
-	enum_simd_variant simd_width = USE_OPENCL;
-#else
-	enum_simd_variant simd_width = USE_NO_VEC;
-#endif
-
-	timm.setup(simd_width);
-
 	// generate a random image
 	auto img_rand = Mat(480, 640, CV_8UC3);
 	randu(img_rand, Scalar::all(0), Scalar::all(255));

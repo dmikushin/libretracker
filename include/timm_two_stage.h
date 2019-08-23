@@ -31,9 +31,6 @@ public:
 
 	void setup(enum_simd_variant simd_width)
 	{
-		stage1.setup(simd_width);
-		stage2.setup(simd_width);
-
 		#ifdef __TIMM_OPENCL__
 		// only try to compile the opencl kernel if we actually use OpenCL.
 		if (simd_width == USE_OPENCL)
@@ -57,11 +54,7 @@ public:
 	#ifdef __TIMM_OPENCL__
 	: stage1(gradient_kernel), stage2(gradient_kernel)
 	#endif
-	{
-		stage1.debug_window_name = "Stage 1 (coarse)";
-		stage2.debug_window_name = "Stage 2 (fine)";
-		
-	}
+	{ }
 
 	void set_options(options o)
 	{
@@ -70,19 +63,26 @@ public:
 		stage2.opt = opt.stage2;
 
 		// if the window width is smaller than the down scaling width, make the down_scaling_width equal to the window width to save processing time
-		stage2.opt.down_scaling_width = min(stage2.opt.down_scaling_width, opt.window_width);
+		stage2.opt.down_scaling_width = std::min(stage2.opt.down_scaling_width, opt.window_width);
 	}
 
-	void set_debug_toggles(array<bool, 4> debug_toggles)
+	void set_debug_toggles(std::array<bool, 4> debug_toggles)
 	{
 		stage1.debug_toggles = debug_toggles;
 		stage2.debug_toggles = debug_toggles;
 	}
 
-	array<float, 4> get_timings() { return array<float, 4>{stage1.measure_timings[0], stage1.measure_timings[1], stage2.measure_timings[0], stage2.measure_timings[1]}; }
+	std::array<float, 4> get_timings()
+	{
+		return std::array<float, 4>
+		{
+			stage1.measure_timings[0], stage1.measure_timings[1],
+			stage2.measure_timings[0], stage2.measure_timings[1]
+		};
+	}
 
 	// two stages: coarse estimation and local refinement of pupil center
-	tuple<cv::Point, cv::Point> pupil_center(cv::Mat& frame_gray)
+	std::tuple<cv::Point, cv::Point> pupil_center(cv::Mat& frame_gray)
 	{
 		//-- Find Eye Centers
 		cv::Point pupil_pos_coarse = stage1.pupil_center(frame_gray);
@@ -93,10 +93,8 @@ public:
 		
 		pupil_pos.x += rect.x;
 		pupil_pos.y += rect.y;
-		return tie(pupil_pos, pupil_pos_coarse);
+		return std::tie(pupil_pos, pupil_pos_coarse);
 	}
-
-
 
 private:
 
@@ -144,6 +142,4 @@ public:
 			draw_cross(frame, *ground_truth_pos, 7, cv::Scalar(255, 0, 255));
 		}
 	}
-
-
 };
