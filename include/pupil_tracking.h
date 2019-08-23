@@ -1,9 +1,9 @@
 #pragma once
 
-#include "deps/dependencies.h"
+#include "dependencies.h"
 
 #ifdef _WIN32
-#include "deps/DeviceEnumerator.h"
+#include "DeviceEnumerator.h"
 #endif
 
 #include "timm_two_stage.h"

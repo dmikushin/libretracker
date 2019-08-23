@@ -23,7 +23,7 @@
 
 using namespace std;
 
-#include "deps/dependencies.h"
+#include "dependencies.h"
 
 // ugly hack because OpenCV has no flexible window handling
 extern int debug_window_pos_x;
@@ -152,7 +152,7 @@ protected:
 		__m128 gy_in = _mm_load_ps(sd+12);
 
 
-		// calc the dot product	for the four vec2f		// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps. This instruction computes the dot product of single precision floating point values.  // https://msdn.microsoft.com/en-us/library/bb514054(v=vs.120).aspx
+		// calc the dot product	for the four vec2f		// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps. This instruction computes the dot product of single precision floating point values.  // https://msdn.microsoft.com/en-ulibrary/bb514054(v=vs.120).aspx
 		dx_in = _mm_sub_ps(dx_in, cx_sse);
 		dy_in = _mm_sub_ps(dy_in, cy_sse);
 		__m128 tmp1 = _mm_mul_ps(dx_in, dx_in);
@@ -186,7 +186,7 @@ protected:
 	}
 
 
-	// https://stackoverflow.com/questions/13219146/how-to-sum-m256-horizontally#13222410
+	// https://stackoverflow.com/question13219146/how-to-sum-m256-horizontally#13222410
 	// x = ( x7, x6, x5, x4, x3, x2, x1, x0 )
 	inline float sum8(__m256 x)
 	{
@@ -239,7 +239,7 @@ protected:
 		dx_in = _mm256_sub_ps(dx_in, cx_sse);
 		dy_in = _mm256_sub_ps(dy_in, cy_sse);
 
-		// calc the dot product	for the eight vec2f		// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps. This instruction computes the dot product of single precision floating point values.  // https://msdn.microsoft.com/en-us/library/bb514054(v=vs.120).aspx
+		// calc the dot product	for the eight vec2f		// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps. This instruction computes the dot product of single precision floating point values.  // https://msdn.microsoft.com/en-ulibrary/bb514054(v=vs.120).aspx
 		__m256 tmp1 = _mm256_mul_ps(dx_in, dx_in);
 		__m256 tmp2 = _mm256_mul_ps(dy_in, dy_in);
 		tmp1 = _mm256_add_ps(tmp1, tmp2);
@@ -285,7 +285,7 @@ protected:
 		dx_in = _mm512_sub_ps(dx_in, cx_sse);
 		dy_in = _mm512_sub_ps(dy_in, cy_sse);
 
-		// calc the dot product	for the sixteen vec2f		// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps. This instruction computes the dot product of single precision floating point values.  // https://msdn.microsoft.com/en-us/library/bb514054(v=vs.120).aspx
+		// calc the dot product	for the sixteen vec2f		// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps. This instruction computes the dot product of single precision floating point values.  // https://msdn.microsoft.com/en-ulibrary/bb514054(v=vs.120).aspx
 		__m512 tmp1 = _mm512_mul_ps(dx_in, dx_in);
 		__m512 tmp2 = _mm512_mul_ps(dy_in, dy_in);
 		tmp1 = _mm512_add_ps(tmp1, tmp2);

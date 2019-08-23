@@ -4,10 +4,10 @@
 #include <opencv2/opencv.hpp>
 
 
-#include "deps/dependencies.h"
+#include "dependencies.h"
 
-#include "deps/aruco/aruco.h"
-#include "deps/aruco/cvdrawingutils.h"
+#include "aruco/aruco.h"
+#include "aruco/cvdrawingutils.h"
 
 
 // implements a drawing canvas / flat screen that is tracked using aruco markers
@@ -88,7 +88,7 @@ public:
 
 	protected:
 
-		// https://www.researchgate.net/profile/Christopher_R_Wren/publication/215439543_Perspective_Transform_Estimation/links/56df558708ae9b93f79a948e.pdf
+		// https://www.researchgate.net/profile/Christopher_R_Wren/publication/215439543_Perspective_Transform_Estimation/link56df558708ae9b93f79a948e.pdf
 		// see PerspectiveTransformEstimation.pdf
 		// array of points on:
 		// ip = Image plane

@@ -4,131 +4,38 @@ include(CheckIncludeFiles)
 
 project(libretracker)
 
+# Default to debug build
+set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Release)
 
-### enable / disable OpenCL and Labstreaming layer ###
 option (OPENCL_ENABLED "Use OpenCL" OFF) 
-option (LIBLSL_ENABLED "Add Labstreaming Layer" OFF) 
-######################################################
 
-
-### add  MACRO Definitions  ######################
 if (OPENCL_ENABLED)
-	add_definitions(-DOPENCL_ENABLED)
+add_definitions(-DOPENCL_ENABLED)
 endif ()
-if (LIBLSL_ENABLED)
-	# set (LSL_DIR "/home/labadmin/cpp/labstreaminglayer/build/install/LSL/share/LSL/") % not working.. 
-	add_definitions(-DLSL_ENABLED)
-endif ()
-##################################################
-
-
-
-### define the required libraries ################
-
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/eigen)
-# cmake doesnt know how to deal with Eigen3 under Windows, so search only under linux / unix for eigen 3...
-if (UNIX)
-	find_package(OpenCV REQUIRED core imgproc imgcodecs highgui videoio calib3d)
-	set(FLTK_SKIP_FLUID true)
-	find_package(FLTK REQUIRED)
-
-	if (LIBLSL_ENABLED)
-		link_directories("/home/labadmin/cpp/labstreaminglayer/build/install/LSL/lib/")
-		set (LSL_INCLUDE_DIR "/home/labadmin/cpp/labstreaminglayer/build/install/LSL/include")
-		set (LSL_LIBRARY "lsl64")
-	endif ()
-
-else ()
-	# under windows (and using cmake-gui), ask the user to enter the path to the headers and lib files.
-	set(OPENCV_INCLUDE_DIR "enter path" CACHE STRING "please enter here the path to the eigen3 include directory")
-	set(FLTK_INCLUDE_DIR "enter path" CACHE STRING "please enter here the path to the FLTK include directory")
-	
-	set(FLTK_LIBRARIES "enter path" CACHE STRING "please enter here the path to the FLTK library directory")
-	set(OpenCV_LIBS "enter path" CACHE STRING "please enter here the path to the OpenCV library directory")
-
-	if (LIBLSL_ENABLED)
-		set (LSL_INCLUDE_DIR "enter path" CACHE STRING "please enter here the path to the Labstreaming Layer include directory")
-		set (LSL_LIBRARY "enter path" CACHE STRING "please enter here the path to the Labstreaming Layer library directory")
-	endif ()
-endif()
-
-
+find_package(OpenCV REQUIRED core imgproc imgcodecs highgui videoio calib3d)
+set(FLTK_SKIP_FLUID true)
+find_package(FLTK REQUIRED)
 
 if (OPENCL_ENABLED)
-	find_package(Boost REQUIRED)
-	find_package(OpenCL REQUIRED)
-endif ()
-##################################################
-
- 
-
-### define the list of source files ##############
-set(SOURCES src/main.cpp src/timm.cpp src/pupil_tracking.cpp src/aruco_include.cpp src/eyetracking_speller.cpp
-src/speller_canvas.cpp src/aruco_canvas.cpp src/deps/s/simple_gui_fltk.cpp src/deps/s/cv_camera_control.cpp 
-src/deps/s/opencv_threaded_capture.cpp)
-if (OPENCL_ENABLED)
-	set(SOURCES ${SOURCES} src/opencl_kernel.cpp)
-endif ()
-##################################################
-
-
-
-
-
-### define some include directories ##############
-include_directories (${EIGEN3_INCLUDE_DIR})
-include_directories (${OPENCV_INCLUDE_DIR})
-include_directories (${FLTK_INCLUDE_DIR})
-
-
-if (OPENCL_ENABLED)
-	include_directories (${Boost_INCLUDE_DIRS})
-	include_directories (${OpenCL_INCLUDE_DIRS})
-	#include_directories ("src/deps/OpenCL-Headers/")
-	#include_directories ("src/deps/compute/include/")
+find_package(Boost REQUIRED)
+find_package(OpenCL REQUIRED)
+include_directories (${Boost_INCLUDE_DIRS})
+include_directories (${OpenCL_INCLUDE_DIRS})
 endif ()
 
-if (LIBLSL_ENABLED)
-	include_directories (${LSL_INCLUDE_DIR})
-endif ()
-
-##################################################
-
-
-
-
-### define the executable ######################
-#message("defining executable and link options")
-#message("fltk libs: ${FLTK_LIBRARIES}")
-#message("opencv libs: ${OpenCV_LIBS}")
-
-CHECK_INCLUDE_FILES(arm_neon.h ARM_NEON_AVAILABLE)
-if (ARM_NEON_AVAILABLE)
-	message("enabling usage of ARM NEON Instructions")
-	add_compile_options("-mfpu=neon")
-endif()
-
-
-add_executable(libretracker ${SOURCES})
-target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/eigen")
+file(GLOB SRC "src/*.cpp")
+add_executable(${PROJECT_NAME} ${SRC})
+target_include_directories(${PROJECT_NAME} PRIVATE "${FLTK_INCLUDE_DIR}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${OpenCV_INCLUDE_DIRS}")
-
-# add_compile_options("-std=c++14")
-# target_compile_features(libretracker PUBLIC cxx_std_14) # this is the better way
-
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/eigen")
 target_link_libraries(${PROJECT_NAME} ${FLTK_LIBRARIES} GL pthread ${OpenCV_LIBRARIES})
 
 if (OPENCL_ENABLED)
-	#target_link_libraries(${Boost_LIBRARIES}) # not really required here, because only "header-only libs" are used in this project
-	target_link_libraries(libretracker ${OpenCL_LIBRARY})
+target_link_libraries(${PROJECT_NAME} ${OpenCL_LIBRARY})
 endif ()
-
-if (LIBLSL_ENABLED)
-	target_link_libraries(libretracker ${LSL_LIBRARY})
-endif ()
-##################################################
-
-
-
 

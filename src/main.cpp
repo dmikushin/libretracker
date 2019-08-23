@@ -44,8 +44,8 @@
 
 // detects capabilites of the CPU and OS. Helps in selecting the suitable vectorization option.
 #ifdef _WIN32
-#include "deps/cpu_features/cpu_x86.h"
-#include "deps/DeviceEnumerator.h"
+#include "cpu_features/cpu_x86.h"
+#include "DeviceEnumerator.h"
 #endif
 
 

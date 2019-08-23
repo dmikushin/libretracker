@@ -9,9 +9,9 @@
 #include "aruco_canvas.h"
 #include "speller_canvas.h"
 #include "pupil_tracking.h"
-#include "deps/dependencies.h"
+#include "dependencies.h"
 
-#include "deps/s/opencv_threaded_capture.h"
+#include "opencv_threaded_capture.h"
 
 #include <atomic>
 

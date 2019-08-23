@@ -571,7 +571,7 @@ void Eyetracking_speller::run(enum_simd_variant simd_width, int eye_cam_id, int 
 #include "lt_lsl_protocol.h"
 #include <limits>
 
-//#include "deps/s/sdl_opencv.h"
+//#include "s/sdl_opencv.h"
 
 // multithreaded capture and rendering to ensure flicker stimuli are presented with the monitor refresh rate
 // separate blocking function with a while loop

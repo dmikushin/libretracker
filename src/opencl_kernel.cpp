@@ -1,3 +1,5 @@
+#ifdef OPENCL_ENABLED
+
 #include "opencl_kernel.h"
 
 void Opencl_kernel::setup()
@@ -95,7 +97,7 @@ void Opencl_kernel::prepare_data_tmp(compute::image2d& img_out_device, const cv:
 }
 
 
-#include "deps/s/simple_gui_fltk.h"
+#include "s/simple_gui_fltk.h"
 
 void Opencl_kernel::menu_select_device()
 {
@@ -173,3 +175,6 @@ void Opencl_kernel::print_device_info()
 	std::transform(str_extensions.begin(), str_extensions.end(), str_extensions.begin(), [](char ch) {return ch == ' ' ? '\n' : ch; });
 	cout << "OpenCL driver: available extensions:\n" << str_extensions << "\n";
 }
+
+#endif // OPENCL_ENABLED
+
