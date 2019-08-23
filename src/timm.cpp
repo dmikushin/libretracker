@@ -326,8 +326,6 @@ void Timm::imshow_debug(cv::Mat& img, std::string debug_window)
 	}
 	cv::resize(debug_img1, debug_img2, cv::Size(300, 300));
 	imshow(debug_window, debug_img2);
-	cv::moveWindow(debug_window, debug_window_pos_x, 1080 - 450);
-	debug_window_pos_x += 310;
 }
 
 
