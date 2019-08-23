@@ -3,8 +3,8 @@ cmake_minimum_required (VERSION 3.1)
 project(libretracker)
 
 # Default to debug build
-set(CMAKE_BUILD_TYPE Debug)
-#set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 option (OPENCL_ENABLED "Use OpenCL" OFF) 
 

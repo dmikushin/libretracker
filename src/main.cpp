@@ -1,5 +1,6 @@
 #include "pupil_tracker.h"
 #include "opencv2/imgcodecs.hpp"
+#include "timing.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -48,14 +49,16 @@ int main(int argc, char* argv[])
 				pupilTracker.reset(new PupilTracker());
 
 			cv::Mat output;
-			double time = 0.0;
+			double start; get_time(&start);
 			pupilTracker->run(input, output);
+			double finish; get_time(&finish);
 
 			const string outputPath = (imagePath.parent_path() / "processed" / imageFilenames[i]).string();
 			cv::imwrite(outputPath, output);
 
-			printf("Processing frame \"%s\" time = %f ms\n", imageFilenames[i].c_str(), time);
-			if (i > 0) avgDuration += time;
+			const double time_ms = (finish - start) * 1000;
+			printf("Processing frame \"%s\" time = %f ms\n", imageFilenames[i].c_str(), time_ms);
+			if (i > 0) avgDuration += time_ms;
 		}
 		
 		printf("Average processing time = %f ms\n", avgDuration / (imageFilenames.size() - 1));
