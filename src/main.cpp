@@ -1,62 +1,12 @@
-
-
-// requires the corresponding SDK. Nvidia: CUDA SDK, AMD: AMDGPU-PRO or ROCm drivers come bundled with OpenCL libs
-// #define ENABLE_OPENCL_CODE 
-
-// libraries + paths (specific for my setup, adjust to your own paths)
-#ifdef _DEBUG
-#pragma comment(lib, "opencv40/build/x64/vc15/lib/opencv_world401d.lib")
-#pragma comment(lib, "fltk14/bin/lib/Debug/fltkd.lib")
-#pragma comment(lib, "fltk14/bin/lib/Debug/fltk_gld.lib")
-#else
-#pragma comment(lib, "opencv40/build/x64/vc15/lib/opencv_world401.lib")
-#pragma comment(lib, "fltk14/bin/lib/Release/fltk.lib")
-#pragma comment(lib, "fltk14/bin/lib/Release/fltk_gl.lib")
-#endif
-
-//#include<SDL2/SDL_main.h>
-//#pragma comment(lib, "SDL2/lib/x64/SDL2.lib")
-//#pragma comment(lib, "SDL2/lib/x64/SDL2main.lib")
-
-
-
-#pragma comment(lib, "opencl_cu10/lib/x64/opencl.lib")
-
-#ifdef _WIN32
-#pragma comment(lib, "wsock32.lib")
-#pragma comment(lib, "opengl32.lib")
-#pragma comment(lib, "glu32.lib")
-#pragma comment(lib, "comctl32.lib")
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "kernel32.lib")
-#pragma comment(lib, "user32.lib")
-#pragma comment(lib, "gdi32.lib")
-#pragma comment(lib, "winspool.lib")
-#pragma comment(lib, "shell32.lib")
-#pragma comment(lib, "ole32.lib")
-#pragma comment(lib, "oleaut32.lib")
-#pragma comment(lib, "uuid.lib")
-#pragma comment(lib, "comdlg32.lib")
-#pragma comment(lib, "advapi32.lib")
-#endif
-
 #include "eyetracking_speller.h"
-
-// detects capabilites of the CPU and OS. Helps in selecting the suitable vectorization option.
-#ifdef _WIN32
-#include "cpu_features/cpu_x86.h"
-#include "DeviceEnumerator.h"
-#endif
-
 
 // hack because openCV has no flexible window handling
 int debug_window_pos_x = 10;
 
 void main_menu(enum_simd_variant simd_width)
 {
-	
-
 PRINT_MENU:
+
 	cout << "\n=== Menu ===\n";
 	cout << "[0] Eye Cam pupil tracking\n";
 	cout << "[1] eyetracking speller demo\n";
@@ -199,25 +149,6 @@ int main(int argc, char* argv[])
 				str_video_devices.push_back("Camera id:" + to_string(i));
 			}
 
-			#ifdef _WIN32
-			DeviceEnumerator de;
-			// Video Devices
-			auto devices = de.getVideoDevicesMap();
-			if (devices.size() == 0)
-			{
-				std::cout << "No video devices detected using Windows Device Enumeration. you can still try to use a device by ID, only.\n";
-			}
-			else
-			{
-				str_video_devices.clear();
-				for (auto const& device : devices)
-				{
-					str_video_devices.push_back("id:" + to_string(device.first) + " Name: " + device.second.deviceName);
-					std::cout << str_video_devices.back() << std::endl; // Print information about the devices			
-				}
-			}
-			#endif			
-
 			sg.add_separator_box("Select the eye-camera:");			
 			for (int i = 0; i< str_video_devices.size();i++)
 			{
@@ -308,7 +239,7 @@ int main(int argc, char* argv[])
 	return EXIT_SUCCESS;
 }
 
-
 #ifdef USE_OPENCL
 #include "opencl_kernel.cpp"
 #endif
+

@@ -1,6 +1,0 @@
-[submodule "src/deps/compute"]
-	path = src/deps/compute
-	url = https://github.com/boostorg/compute.git
-[submodule "src/deps/OpenCL-Headers"]
-	path = src/deps/OpenCL-Headers
-	url = https://github.com/KhronosGroup/OpenCL-Headers.git
