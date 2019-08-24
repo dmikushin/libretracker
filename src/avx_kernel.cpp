@@ -1,4 +1,4 @@
-#include "timm.h"
+#include "timm_vectorized.h"
 
 #ifdef _WIN32
 #include <intrin.h>
@@ -41,7 +41,7 @@ inline float sum8_alt(__m256 x)
 	return _mm256_cvtss_f32(x);
 }
 
-float Timm::kernel_op_avx(float cx, float cy, const float* sd)
+float TimmVectorized::kernelOpAVX(float cx, float cy, const float* sd)
 {
 	//__declspec(align(16)) float dx[4]; // no effect - compiler seems to automatically align code		
 

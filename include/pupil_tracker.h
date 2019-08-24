@@ -1,10 +1,10 @@
 #ifndef PUPIL_TRACKER_H
 #define PUPIL_TRACKER_H
 
-#include "dependencies.h"
 #include "timm_two_stage.h"
 
 #include <atomic>
+#include <Eigen/Eigen>
 
 class PupilTracker
 {

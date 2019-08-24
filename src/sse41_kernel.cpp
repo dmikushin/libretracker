@@ -1,4 +1,4 @@
-#include "timm.h"
+#include "timm_vectorized.h"
 
 #ifdef _WIN32
 #include <intrin.h>
@@ -7,7 +7,7 @@
 #endif
 
 #ifdef SSE41_ENABLED
-float Timm::kernel_op_sse(float cx, float cy, const float* sd)
+float TimmVectorized::kernelOpSSE41(float cx, float cy, const float* sd)
 {
 	// wenn das gut klappt, dann für raspi mal die sse2neon lib anschauen: https://github.com/jratcliff63367/sse2neon
 

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EIGEN_PSEUDOINVERSE_H
+#define EIGEN_PSEUDOINVERSE_H
 
 #include <Eigen/Eigen>
 #include <Eigen/SVD>
@@ -157,3 +158,6 @@ void test_module()
 }
 
 #endif
+
+#endif // EIGEN_PSEUDOINVERSE_H
+

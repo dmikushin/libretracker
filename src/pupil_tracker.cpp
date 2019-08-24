@@ -1,4 +1,5 @@
 #include "pupil_tracker.h"
+#include "eigenlab.h"
 
 #include <random>
 
@@ -30,8 +31,8 @@ void PupilTracker::run(const cv::Mat& input, cv::Mat& output)
 
 		// auto[pupil_pos, pupil_pos_coarse] = ...  (structured bindings available with C++17)
 		cv::Point pupil_pos, pupil_pos_coarse;
-		std::tie(pupil_pos, pupil_pos_coarse) = timm.pupil_center(output);
-		//pupil_pos = timm.stage1.pupil_center(output);
+		std::tie(pupil_pos, pupil_pos_coarse) = timm.pupilCenter(output);
+		//pupil_pos = timm.stage1.pupilCenter(output);
 		output = input;
 		timm.visualize_frame(output, pupil_pos, pupil_pos_coarse);
 	}

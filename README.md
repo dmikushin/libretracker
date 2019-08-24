@@ -20,6 +20,8 @@ Prerequisites for Debian-like distros:
 sudo apt-get install git cmake libopencv-dev ocl-icd-opencl-dev
 ```
 
+Compiling:
+
 ```console
 git clone --recursive https://github.com/dmikushin/libretracker.git
 cd libretracker

@@ -1,4 +1,4 @@
-#include "timm.h"
+#include "timm_vectorized.h"
 
 #ifdef _WIN32
 #include <intrin.h>
@@ -7,7 +7,7 @@
 #endif
 
 #ifdef AVX512_ENABLED
-float Timm::kernel_op_avx512(float cx, float cy, const float* sd)
+float TimmVectorized::kernelOpAVX512(float cx, float cy, const float* sd)
 {
 
 	//__declspec(align(16)) float dx[4]; // no effect - compiler seems to automatically align code		

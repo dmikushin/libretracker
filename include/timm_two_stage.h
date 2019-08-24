@@ -1,15 +1,8 @@
-#pragma once
+#ifndef TIMM_TWO_STAGE_H
+#define TIMM_TWO_STAGE_H
 
-// here you can choose to include the version of timm.h with opencl support
-#ifdef OPENCL_ENABLED
-#include "timm_opencl.h"
-#else
-#include "timm.h"
-#endif
-
+#include "timm_gpu.h"
 #include "helpers.h"
-
-#include <opencv2/highgui/highgui.hpp>
 
 class Timm_two_stage
 {
@@ -18,16 +11,7 @@ class Timm_two_stage
 
 public :
 
-	Timm_two_stage() 
-	#ifdef __TIMM_OPENCL__
-	: stage1(gradient_kernel), stage2(gradient_kernel)
-	#endif
-	{
-#ifdef OPENCL_ENABLED
-		// only try to compile the opencl kernel if we actually use OpenCL.
-		gradient_kernel.setup();
-#endif
-	}
+	Timm_two_stage() { }
 
 	struct options
 	{
@@ -36,17 +20,11 @@ public :
 		int window_width = 150;
 		timm_options stage1; // coarse pupil center estimation stage
 		timm_options stage2; // fine, windowed pupil center estimation stage
-	} opt;
+	}
+	opt;
 
-	#ifdef __TIMM_OPENCL__
-	Opencl_kernel gradient_kernel;
-
-	Timm_opencl stage1;
-	Timm_opencl stage2;
-	#else
-	Timm stage1;
-	Timm stage2;
-	#endif
+	TimmGPU stage1;
+	TimmGPU stage2;
 
 	void set_options(options o)
 	{
@@ -54,14 +32,9 @@ public :
 		stage1.opt = opt.stage1;
 		stage2.opt = opt.stage2;
 
-		// if the window width is smaller than the down scaling width, make the down_scaling_width equal to the window width to save processing time
+		// If the window width is smaller than the down scaling width,
+		// make the down_scaling_width equal to the window width to save processing time.
 		stage2.opt.down_scaling_width = std::min(stage2.opt.down_scaling_width, opt.window_width);
-	}
-
-	void set_debug_toggles(std::array<bool, 4> debug_toggles)
-	{
-		stage1.debug_toggles = debug_toggles;
-		stage2.debug_toggles = debug_toggles;
 	}
 
 	std::array<float, 4> get_timings()
@@ -74,21 +47,21 @@ public :
 	}
 
 	// two stages: coarse estimation and local refinement of pupil center
-	std::tuple<cv::Point, cv::Point> pupil_center(cv::Mat& frame_gray)
+	std::tuple<cv::Point, cv::Point> pupilCenter(cv::Mat& frame_gray)
 	{
 		//-- Find Eye Centers
-		cv::Point pupil_pos_coarse = stage1.pupil_center(frame_gray);
+		cv::Point pupil_pos_coarse = stage1.pupilCenter(frame_gray);
 		
 		auto rect = fit_rectangle(frame_gray, pupil_pos_coarse, opt.window_width);
 		frame_gray_windowed = frame_gray(rect);
-		cv::Point pupil_pos = stage2.pupil_center(frame_gray_windowed);
+		cv::Point pupil_pos = stage2.pupilCenter(frame_gray_windowed);
 		
 		pupil_pos.x += rect.x;
 		pupil_pos.y += rect.y;
 		return std::tie(pupil_pos, pupil_pos_coarse);
 	}
 
-private:
+private :
 
 	///////// visualisation stuff ///////////
 
@@ -112,8 +85,8 @@ private:
 		return cv::Rect(x - w2, y - w2, 2 * w2, 2 * w2);
 	}
 
+public :
 
-public:
 	void visualize_frame(cv::Mat& frame, cv::Point2f pupil_pos, cv::Point2f pupil_pos_coarse)
 	{
 		cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
@@ -129,3 +102,6 @@ public:
 		draw_cross(frame, pupil_pos, 7, cv::Scalar(0, 255, 0));
 	}
 };
+
+#endif // TIMM_TWO_STAGE_H
+

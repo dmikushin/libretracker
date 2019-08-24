@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EIGENLAB_H
+#define EIGENLAB_H
 
 #include <Eigen/Eigen>
 #include <fstream>
@@ -90,9 +91,5 @@ template<class T> bool load_matrix(Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynam
 	return true;
 }
 
-
-
-
-
-
+#endif // EIGENLAB_H
 

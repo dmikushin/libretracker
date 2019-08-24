@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FAST_SQRT_H
+#define FAST_SQRT_H
 
 // https://en.wikipedia.org/wiki/Fast_inverse_square_root
 // but slower than using dedicated SSE instructions
@@ -56,3 +57,6 @@ float32x4_t vrsqrtsq_f32(float32x4_t a, float32x4_t b); // VRSQRTS.F32 q0, q0, q
 }
 
 #endif
+
+#endif // FAST_SQRT_H
+

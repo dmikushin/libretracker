@@ -11,15 +11,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE Release)
 
+# Search path for CMake include files.
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+	${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gpurt/cmake)
+
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffast-math")
 
-option (OPENCL_ENABLED "Use OpenCL" OFF) 
+option (OPENCL_ENABLED "Use OpenCL" ON) 
 
 if (OPENCL_ENABLED)
 add_definitions(-DOPENCL_ENABLED)
 endif ()
 
-find_package(OpenCV REQUIRED core imgproc imgcodecs highgui videoio calib3d)
+find_package(OpenCV REQUIRED core imgproc imgcodecs)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/agner)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/eigen EXCLUDE_FROM_ALL)
@@ -30,24 +34,28 @@ set_target_properties(tbb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR
 set_target_properties(tbbmalloc PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set_target_properties(tbbmalloc_proxy PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
+file(GLOB SRC "src/*.cpp")
+
 if (OPENCL_ENABLED)
-find_package(Boost REQUIRED)
-find_package(OpenCL REQUIRED)
+find_package(GPURT REQUIRED)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gpurt)
+add_opencl_kernel("${CMAKE_CURRENT_SOURCE_DIR}/src/opencl_kernel.cl" SRC)
 endif ()
 
-file(GLOB SRC "src/*.cpp")
 add_executable(${PROJECT_NAME} ${SRC})
 target_include_directories(${PROJECT_NAME} PRIVATE "${OpenCV_INCLUDE_DIRS}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/eigen")
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/agner")
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/tbb/include")
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} agner tbb stdc++fs)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} agner tbb)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+target_link_libraries(${PROJECT_NAME} stdc++fs)
+endif()
 
 if (OPENCL_ENABLED)
-target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCL_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${OpenCL_LIBRARY})
+target_include_directories(${PROJECT_NAME} PRIVATE "${GPURT_INCLUDE_DIRS}")
+target_link_libraries(${PROJECT_NAME} ${GPURT_LIBRARIES})
 endif ()
 
 include(CheckCXXCompilerFlag)
