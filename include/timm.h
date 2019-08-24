@@ -4,7 +4,6 @@
 #include <array>
 #include <algorithm>
 #include <vector>
-#include <thread>
 #include <opencv2/imgproc.hpp>
 
 // needed to access Vector Extension Instructions
@@ -16,14 +15,15 @@
 #include "instrset.h"
 #include "aligned_allocator.h"
 
-// the template parameter simd_width specifies the vector register bit width
+// the template parameter instrSet specifies the vector register bit width
 // e.g. 512 for AVX512, 256 for AVX2 and 128 for SSE
 class Timm
 {
 protected :
 
-	agner::InstrSet simd_width;
+	agner::InstrSet instrSet;
 	size_t n_floats;
+	int n_threads;
 
 	// optimised for SIMD: 
 	// this vector stores sequential chunks of floats for x, y, gx, gy
@@ -43,12 +43,8 @@ protected :
 	cv::Mat debug_img1;
 	cv::Mat debug_img2;
 
-	// storage for threads used by pupil_center	
-	std::vector<std::thread> threads;
-
 public :
 
-	int n_threads = 1;
 	std::array<bool, 4> debug_toggles{ false, false, false , false };
 
 	// for timing measurements

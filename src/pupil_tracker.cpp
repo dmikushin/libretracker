@@ -23,9 +23,6 @@ void PupilTracker::run(const cv::Mat& input, cv::Mat& output)
 	opt = set_options(params);
 	timm.set_options(opt);
 
-	timm.stage1.n_threads = 1;
-	timm.stage2.n_threads = 1;
-
 	// Apply the classifier to the frame
 	if (!input.empty())
 	{

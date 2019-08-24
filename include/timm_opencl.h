@@ -21,7 +21,7 @@ public:
 	cv::Point pupil_center(cv::Mat& eye_img)
 	{
 
-		if (simd_width == USE_OPENCL)
+		if (instrSet == USE_OPENCL)
 		{
 			pre_process(eye_img);
 

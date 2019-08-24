@@ -5,19 +5,34 @@
 #include <queue>
 #include <iostream>
 #include <opencv2/highgui/highgui.hpp>
+#include <tbb/blocked_range2d.h>
+#include <tbb/parallel_for.h>
+#include <tbb/task_arena.h>
+#include <tbb/task_group.h>
+#include <tbb/task_scheduler_init.h>
 
 using namespace agner;
 using namespace std;
 
 Timm::Timm()
 {
+	n_threads = 1;
 #ifndef OPENCL_ENABLED
-	simd_width = InstrSet80386;
+	// Get threads from the conventional OMP_NUM_THREADS environment variable.
+	char* c_omp_num_threads	= getenv("OMP_NUM_THREADS");
+	if (c_omp_num_threads)
+	{
+		int omp_num_threads = atoi(c_omp_num_threads);
+		if (omp_num_threads > 0)
+			n_threads = omp_num_threads;
+	}
+
+	instrSet = InstrSet80386;
 	n_floats = 1;
 #ifdef AVX512_ENABLED
 	if (isSupported(InstrSetAVX512F))
 	{
-		simd_width = InstrSetAVX512F;
+		instrSet = InstrSetAVX512F;
 		n_floats = 16;
 		goto finish;
 	}
@@ -25,7 +40,7 @@ Timm::Timm()
 #ifdef AVX2_ENABLED
 	if (isSupported(InstrSetAVX2))
 	{
-		simd_width = InstrSetAVX2;
+		instrSet = InstrSetAVX2;
 		n_floats = 8;
 		goto finish;
 	}
@@ -33,20 +48,22 @@ Timm::Timm()
 #ifdef AVX_ENABLED
 	if (isSupported(InstrSetAVX))
 	{
-		simd_width = InstrSetAVX;
+		instrSet = InstrSetAVX;
 		n_floats = 8;
 		goto finish;
 	}
 #endif
 	if (isSupported(InstrSetSSE41))
 	{
-		simd_width = InstrSetSSE41;
+		instrSet = InstrSetSSE41;
 		n_floats = 4;
 		goto finish;
 	}
 #endif
 finish :
-	printf("simd_width = %d\n", simd_width);
+	printf("instrSet = %d\n", instrSet);
+	printf("# of threads : %d\n", n_threads);
+	tbb::task_scheduler_init init(n_threads);
 }
 
 cv::Point Timm::pupil_center(const cv::Mat& eye_img)
@@ -55,61 +72,35 @@ cv::Point Timm::pupil_center(const cv::Mat& eye_img)
 
 	pre_process(eye_img);
 
-	//*
 	double t1b; get_time(&t1b);
-	#ifdef _WIN32
+#ifdef _WIN32
 	_ReadWriteBarrier();
-	#endif
+#endif
 	prepare_data();
 
-	// faster code using hand optimized objective function		
-	// todo: parallelize with std::async threadpools
-	//auto cols = outSum.cols;
 	auto data = out_sum.ptr<float>(0);
-	size_t idx = 0;
-
-	// https://docs.microsoft.com/en-us/cpp/parallel/auto-parallelization-and-auto-vectorization
-	// compiler switch must be enabled  /Qpar /Qpar-report:1 
-	// #pragma loop(hint_parallel(2))
-
-	const size_t cols = out_sum.cols;
-	auto pixel_loop = [&](const int y1, const int y2)
-	{
-		//for (size_t y = 0; y < out_sum.rows; y++)
-		for (size_t y = y1; y <= y2; y++)
-		{
-			for (size_t x = 0; x < out_sum.cols; x++)
-			{
-				//data[y*cols + x] = calc_objective_function(x, y, gradientX, gradientY); // 70.1 ms
-				//data[y*cols + x] = calc_objective_function_cache_friendly(x, y, gradients); // 11.5 ms
-				data[y*cols + x] = kernel(x, y);
-			}
-		}
-	};
 
 	if (n_threads > 1)
 	{
-		// create threads
-		threads.clear();
-		int block_size = ceil(float(out_sum.rows) / float(n_threads));
-		for (int i = 0; i < n_threads; i++)
+		tbb::parallel_for(tbb::blocked_range2d<unsigned int>(0, out_sum.rows, 0, out_sum.cols),
+			[&](const tbb::blocked_range2d<unsigned int>& r)
 		{
-			int y1 = i * block_size;
-			int y2 = min((i + 1) * block_size - 1, out_sum.rows-1);
-			threads.emplace_back( thread(pixel_loop, y1, y2) );
-		}
-		// wait for completion of all threads
-		for (auto& t : threads) { t.join(); }
+			for (unsigned int y = r.rows().begin(); y != r.rows().end(); y++)
+				for (unsigned int x = r.cols().begin(); x != r.cols().end(); x++)
+					data[y * out_sum.cols + x] = kernel(x, y);
+		});
 	}
 	else
 	{
-		pixel_loop(0, out_sum.rows - 1);
+		for (unsigned int y = 0; y < out_sum.rows; y++)
+			for (unsigned int x = 0; x < out_sum.cols; x++)
+				data[y * out_sum.cols + x] = kernel(x, y);
 	}
 
 	cv::multiply(out_sum, weight_float, out);
-	#ifdef _WIN32
+#ifdef _WIN32
 	_ReadWriteBarrier(); // to avoid instruction reordering - important for accurate timings
-	#endif
+#endif
 	double t2b; get_time(&t2b);
 	measure_timings[1] = t2b - t1b;
 	//*/
@@ -150,7 +141,7 @@ float Timm::kernel(float cx, float cy)
 #ifdef __arm__
 	for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_arm128(cx, cy, &gradients[i]); }
 #else
-	switch (simd_width)
+	switch (instrSet)
 	{
 	case InstrSetSSE41: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_sse(cx, cy, &gradients[i]); } break;
 	case InstrSetAVX: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_avx(cx, cy, &gradients[i]); } break;
@@ -174,9 +165,9 @@ float Timm::calc_dynamic_threshold(const cv::Mat &mat, float stdDevFactor)
 
 void Timm::pre_process(const cv::Mat& img)
 {
-	#ifdef _WIN32
+#ifdef _WIN32
 	_ReadWriteBarrier();
-	#endif
+#endif
 	// down sample to speed up
 	cv::resize(img, img_scaled, cv::Size(opt.down_scaling_width, img.rows * float(opt.down_scaling_width) / img.cols));
 
@@ -259,9 +250,9 @@ cv::Point Timm::post_process()
 		cv::minMaxLoc(out, NULL, &max_val, NULL, &max_point, mask);
 	}
 
-	#ifdef _WIN32
+#ifdef _WIN32
 	_ReadWriteBarrier(); 
-	#endif
+#endif
 	return max_point;
 }
 
