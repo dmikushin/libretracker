@@ -114,7 +114,7 @@ private:
 
 
 public:
-	void visualize_frame(cv::Mat& frame, cv::Point2f pupil_pos, cv::Point2f pupil_pos_coarse, const cv::Point2f* ground_truth_pos = nullptr)
+	void visualize_frame(cv::Mat& frame, cv::Point2f pupil_pos, cv::Point2f pupil_pos_coarse)
 	{
 		cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
 		auto rect = fit_rectangle(frame, pupil_pos_coarse, opt.window_width);
@@ -126,12 +126,6 @@ public:
 		//circle(frame, pupil_pos_coarse, 2, cv::Scalar(255, 0, 0), 1);
 		
 		// draw eye center fine
-		circle(frame, pupil_pos, 5, cv::Scalar(0, 255, 0), 2);
-
-		//if given a ground truth pos, draw this too
-		if (ground_truth_pos)
-		{
-			draw_cross(frame, *ground_truth_pos, 7, cv::Scalar(255, 0, 255));
-		}
+		draw_cross(frame, pupil_pos, 7, cv::Scalar(0, 255, 0));
 	}
 };
