@@ -33,7 +33,7 @@ make -j4
 
 This version of libretracker reads the input image series from `data/images/trial_0/raw` directory, and saves outputs to `data/images/trial_0/processed`:
 
-```
+```console
 ./libretracker
 ```
 
