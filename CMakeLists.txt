@@ -2,6 +2,11 @@ cmake_minimum_required (VERSION 3.1)
 
 project(libretracker)
 
+# Enable C++ 11 support
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Default to debug build
 #set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE Release)
@@ -43,6 +48,14 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE SSE41_ENABLED)
 set_source_files_properties("src/sse41_kernel.cpp" PROPERTIES COMPILE_FLAGS -msse4.1)
 else()
 message(WARNING "${CMAKE_CXX_COMPILER} does not support SSE4.1, not building AVX kernel")
+endif()
+
+check_cxx_compiler_flag(-mavx AVX_IS_SUPPORTED)
+if (${AVX_IS_SUPPORTED})
+target_compile_definitions(${PROJECT_NAME} PRIVATE AVX_ENABLED)
+set_source_files_properties("src/avx_kernel.cpp" PROPERTIES COMPILE_FLAGS -mavx)
+else()
+message(WARNING "${CMAKE_CXX_COMPILER} does not support AVX, not building AVX kernel")
 endif()
 
 check_cxx_compiler_flag(-mavx2 AVX2_IS_SUPPORTED)

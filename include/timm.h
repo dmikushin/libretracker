@@ -13,17 +13,8 @@
 #endif
 
 #include "dependencies.h"
-
-enum enum_simd_variant
-{
-	USE_NO_VEC =   32,
-	USE_VEC128 =  128,
-	USE_VEC256 =  256,
-	USE_VEC512 =  512,
-	USE_OPENCL = 4096
-};
-
-
+#include "instrset.h"
+#include "aligned_allocator.h"
 
 // the template parameter simd_width specifies the vector register bit width
 // e.g. 512 for AVX512, 256 for AVX2 and 128 for SSE
@@ -31,11 +22,12 @@ class Timm
 {
 protected :
 
-	int simd_width = USE_NO_VEC;
+	agner::InstrSet simd_width;
+	size_t n_floats;
 
 	// optimised for SIMD: 
 	// this vector stores sequential chunks of floats for x, y, gx, gy
-	std::vector<float> gradients;
+	std::vector<float, AlignedAllocator<float, Alignment::AVX512> > gradients;
 	std::vector<float> simd_data;
 
 	cv::Mat gradient_x;
@@ -171,6 +163,9 @@ protected:
 #ifdef SSE41_ENABLED
 	float kernel_op_sse(float cx, float cy, const float* sd);
 #endif
+#ifdef AVX_ENABLED
+	float kernel_op_avx(float cx, float cy, const float* sd);
+#endif
 #ifdef AVX2_ENABLED
 	float kernel_op_avx2(float cx, float cy, const float* sd);
 #endif
@@ -214,7 +209,7 @@ protected:
 		return dotProduct * dotProduct;
 	}
 
-	float kernel(float cx, float cy, const std::vector<float>& gradients);
+	float kernel(float cx, float cy);
 };
 
 #endif // TIMM_H

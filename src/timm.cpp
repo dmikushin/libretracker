@@ -1,5 +1,4 @@
 #include "timm.h"
-#include "instrset.h"
 #include "timing.h"
 
 #include <Eigen/Eigen>
@@ -12,27 +11,37 @@ using namespace std;
 
 Timm::Timm()
 {
-#ifdef OPENCL_ENABLED
-	simd_width = USE_OPENCL;
-#else
-	simd_width = USE_NO_VEC;
+#ifndef OPENCL_ENABLED
+	simd_width = InstrSet80386;
+	n_floats = 1;
 #ifdef AVX512_ENABLED
 	if (isSupported(InstrSetAVX512F))
 	{
-		simd_width = USE_VEC512;
+		simd_width = InstrSetAVX512F;
+		n_floats = 16;
 		goto finish;
 	}
 #endif
 #ifdef AVX2_ENABLED
 	if (isSupported(InstrSetAVX2))
 	{
-		simd_width = USE_VEC256;
+		simd_width = InstrSetAVX2;
+		n_floats = 8;
+		goto finish;
+	}
+#endif
+#ifdef AVX_ENABLED
+	if (isSupported(InstrSetAVX))
+	{
+		simd_width = InstrSetAVX;
+		n_floats = 8;
 		goto finish;
 	}
 #endif
 	if (isSupported(InstrSetSSE41))
 	{
-		simd_width = USE_VEC128;
+		simd_width = InstrSetSSE41;
+		n_floats = 4;
 		goto finish;
 	}
 #endif
@@ -73,7 +82,7 @@ cv::Point Timm::pupil_center(const cv::Mat& eye_img)
 			{
 				//data[y*cols + x] = calc_objective_function(x, y, gradientX, gradientY); // 70.1 ms
 				//data[y*cols + x] = calc_objective_function_cache_friendly(x, y, gradients); // 11.5 ms
-				data[y*cols + x] = kernel(x, y, gradients);
+				data[y*cols + x] = kernel(x, y);
 			}
 		}
 	};
@@ -133,24 +142,22 @@ cv::Point Timm::pupil_center(const cv::Mat& eye_img)
 }
 
 
-float Timm::kernel(float cx, float cy, const vector<float>& gradients)
+float Timm::kernel(float cx, float cy)
 {
 	float c_out = 0.0f;
 	const size_t s = gradients.size();
 
-	const size_t n_floats = simd_width / (8 * sizeof(float));
-
+#ifdef __arm__
+	for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_arm128(cx, cy, &gradients[i]); }
+#else
 	switch (simd_width)
 	{
-#ifdef __arm__
-	case USE_VEC128: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_arm128(cx, cy, &gradients[i]); } break;
-#else
-	case USE_NO_VEC: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op(cx, cy, &gradients[i]); } break;
-	case USE_VEC128: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_sse(cx, cy, &gradients[i]); } break;
-	case USE_VEC256: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_avx2(cx, cy, &gradients[i]); } break;
-	case USE_VEC512: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_avx512(cx, cy, &gradients[i]); } break;
+	case InstrSetSSE41: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_sse(cx, cy, &gradients[i]); } break;
+	case InstrSetAVX: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_avx(cx, cy, &gradients[i]); } break;
+	case InstrSetAVX2: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_avx2(cx, cy, &gradients[i]); } break;
+	case InstrSetAVX512F: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op_avx512(cx, cy, &gradients[i]); } break;
 #endif
-	default: throw std::invalid_argument("wrong or unsupported vectorization width in Timm::kernel"); break;
+	default: for (size_t i = 0; i < s; i += 4 * n_floats) { c_out += kernel_op(cx, cy, &gradients[i]); } break;
 	}
 	return c_out;
 }
@@ -267,7 +274,6 @@ void Timm::prepare_data()
 	auto gx_p = gradient_x.ptr<float>(0);
 	auto gy_p = gradient_y.ptr<float>(0);
 	float c_out = 0.0f;
-	const size_t n_floats = simd_width / (8 * sizeof(float));
 	simd_data.resize(n_floats * 4);
 	size_t k = 0;
 	for (size_t y = 0; y < gradient_x.rows; y++)

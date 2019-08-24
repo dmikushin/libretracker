@@ -13,13 +13,22 @@
 
 class Timm_two_stage
 {
-private:
-
 	cv::Mat frame_gray_windowed;
 	cv::Mat frame_color;
 
-public:
-	int simd_width = USE_VEC256;
+public :
+
+	Timm_two_stage() 
+	#ifdef __TIMM_OPENCL__
+	: stage1(gradient_kernel), stage2(gradient_kernel)
+	#endif
+	{
+#ifdef OPENCL_ENABLED
+		// only try to compile the opencl kernel if we actually use OpenCL.
+		gradient_kernel.setup();
+#endif
+	}
+
 	struct options
 	{
 		using timm_options = typename Timm::options;
@@ -28,17 +37,6 @@ public:
 		timm_options stage1; // coarse pupil center estimation stage
 		timm_options stage2; // fine, windowed pupil center estimation stage
 	} opt;
-
-	void setup(enum_simd_variant simd_width)
-	{
-		#ifdef __TIMM_OPENCL__
-		// only try to compile the opencl kernel if we actually use OpenCL.
-		if (simd_width == USE_OPENCL)
-		{
-			gradient_kernel.setup();
-		}
-		#endif
-	}
 
 	#ifdef __TIMM_OPENCL__
 	Opencl_kernel gradient_kernel;
@@ -49,12 +47,6 @@ public:
 	Timm stage1;
 	Timm stage2;
 	#endif
-
-	Timm_two_stage() 
-	#ifdef __TIMM_OPENCL__
-	: stage1(gradient_kernel), stage2(gradient_kernel)
-	#endif
-	{ }
 
 	void set_options(options o)
 	{
