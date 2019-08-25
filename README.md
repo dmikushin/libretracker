@@ -39,6 +39,17 @@ This version of libretracker reads the input image series from `data/images/tria
 ./libretracker
 ```
 
+# Performance results
+
+The results below are obtained on the provided test dataset. The time values are per frame, averaged from the entire dataset.
+
+Intel(R) Core(TM) i7-3610QM CPU @ 2.30GHz:
+
+basic version: 36.07 ms
+AVX vectorization, 1 thread: 13.63 ms
+AVX vectorization, 4 threads: 5.92 ms
+NVIDIA GTX1060 GPU: 3.48 ms
+
 ## References
 
 Timm and Barth. Accurate eye centre localisation by means of gradients. In Proceedings of the Int. Conference on Computer Theory and Applications (VISAPP), volume 1, pages 125-130, Algarve, Portugal, 2011. INSTICC.
