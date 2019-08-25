@@ -17,11 +17,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffast-math")
 
-option (OPENCL_ENABLED "Use OpenCL" ON) 
-
-if (OPENCL_ENABLED)
-add_definitions(-DOPENCL_ENABLED)
-endif ()
+find_package(CUDA)
 
 find_package(OpenCV REQUIRED core imgproc imgcodecs)
 
@@ -34,15 +30,17 @@ set_target_properties(tbb PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR
 set_target_properties(tbbmalloc PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set_target_properties(tbbmalloc_proxy PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-file(GLOB SRC "src/*.cpp")
-
-if (OPENCL_ENABLED)
+if (CUDA_FOUND)
+file(GLOB SRC "src/*.cpp" "src/*.cu")
 find_package(GPURT REQUIRED)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gpurt)
 add_opencl_kernel("${CMAKE_CURRENT_SOURCE_DIR}/src/opencl_kernel.cl" SRC)
+cuda_add_executable(${PROJECT_NAME} ${SRC})
+else ()
+file(GLOB SRC "src/*.cpp")
+add_executable(${PROJECT_NAME} ${SRC})
 endif ()
 
-add_executable(${PROJECT_NAME} ${SRC})
 target_include_directories(${PROJECT_NAME} PRIVATE "${OpenCV_INCLUDE_DIRS}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/eigen")
@@ -53,7 +51,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 target_link_libraries(${PROJECT_NAME} stdc++fs)
 endif()
 
-if (OPENCL_ENABLED)
+if (CUDA_FOUND)
+target_compile_definitions(${PROJECT_NAME} PRIVATE ENABLE_GPU)
 target_include_directories(${PROJECT_NAME} PRIVATE "${GPURT_INCLUDE_DIRS}")
 target_link_libraries(${PROJECT_NAME} ${GPURT_LIBRARIES})
 endif ()

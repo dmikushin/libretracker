@@ -1,48 +1,47 @@
-__kernel void kernel_inner_gradients(__write_only image2d_t  img_out, const  __constant float * data, const int n, const  int w, const int h)
+#include "DeviceCode.h"
+
+#if defined(__CUDACC__)
+extern "C"
+#endif
+__global__ void kernelOpGPU(int width, uint64_t out_sum_, int nout_sum, uint64_t gradients_, int ngradients)
 {
-	//#pragma OPENCL EXTENSION cl_khr_fp16 : enable
-	const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+	float* out_sum = (float*)out_sum_;
+	float* gradients = (float*)gradients_;
 
-	// Store each work-item's unique row and column
-	const int x = get_global_id(0);
-	const int y = get_global_id(1);
+	int idx = threadIdx(x) + blockDim(x) * blockIdx(x);
+	if (idx >= nout_sum) return;
+	
+	int cy = idx / width;
+	int cx = idx - cy * width;
 
-	// Each work-item iterates around its local area based on the size of the filter
-	const int2 coords = { x, y };  // Coordinates for accessing the image
-
-	// center positions
-	const float2 c = { x, y };
-	float2 p;
-	float2 g;
-	float2 d;
-	float dp = 0.0f;
-	float sum = 0.0f;
-	size_t idx = 0;
-
-	//d = fast_normalize(d); // uses reciprocal square root internally .. but still slower than manual half_sqrt !! (but why??)
-	//d = d * half_rsqrt(dot(d, d)); also not faster ..
-
-	for (int i = 0; i < h; i++)
+	float c_out = 0.0f;
+	
+	for (size_t i = 0; i < ngradients; i += 4)
 	{
-		p.y = i;
-		for (int k = 0; k < w; k++)
-		{
-			g.x = data[idx++];
-			g.y = data[idx++];
-			p.x = k; 
-			d = p - c;
-			d = d * rsqrt(dot(d, d));
-			dp = dot(d, g);
-			dp = max(0.0f, dp);
-			sum += dp*dp;
-		}
+		float* sd = &gradients[i];
+
+		float x  = sd[0];
+		float y  = sd[1];
+		float gx = sd[2];
+		float gy = sd[3];
+		
+		float dx = x - cx;
+		float dy = y - cy;
+
+		// normalize d
+		float magnitude = (dx * dx) + (dy * dy);
+
+		magnitude = 1.0f / sqrt(magnitude);
+
+		dx = dx * magnitude;
+		dy = dy * magnitude;
+
+		float dotProduct = dx * gx + dy * gy;
+		dotProduct = max(0.0f, dotProduct);
+
+		c_out += dotProduct * dotProduct;
 	}
-
-	//sum = 0.5+0.5*sin( fx * fy / fn);
-
-	//barrier(CLK_GLOBAL_MEM_FENCE);
-
-	//Same channel is copied in all three channels
-	//write_imagef(img_out, coords, (float4)(sum, sum, sum, 1.0f));
-	write_imagef(img_out, coords, sum);
+	
+	out_sum[cy * width + cx] = c_out;
 }
+

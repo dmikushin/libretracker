@@ -83,7 +83,7 @@ public :
 
 	// estimates the pupil center
 	// inputs: eye image
-	cv::Point pupilCenter(const cv::Mat& eye_img);
+	virtual cv::Point pupilCenter(const cv::Mat& eye_img);
 };
 
 #endif // TIMM_H

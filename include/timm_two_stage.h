@@ -1,7 +1,11 @@
 #ifndef TIMM_TWO_STAGE_H
 #define TIMM_TWO_STAGE_H
 
+#if ENABLE_GPU
 #include "timm_gpu.h"
+#else
+#include "timm_multhreaded.h"
+#endif
 #include "helpers.h"
 
 class Timm_two_stage
@@ -23,8 +27,13 @@ public :
 	}
 	opt;
 
+#if ENABLE_GPU
 	TimmGPU stage1;
 	TimmGPU stage2;
+#else
+	TimmMultithreaded stage1;
+	TimmMultithreaded stage2;
+#endif
 
 	void set_options(options o)
 	{
