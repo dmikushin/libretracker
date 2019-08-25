@@ -46,8 +46,11 @@ The results below are obtained on the provided test dataset. The time values are
 Intel(R) Core(TM) i7-3610QM CPU @ 2.30GHz:
 
 basic version: 36.07 ms
+
 AVX vectorization, 1 thread: 13.63 ms
+
 AVX vectorization, 4 threads: 5.92 ms
+
 NVIDIA GTX1060 GPU: 3.48 ms
 
 ## References
