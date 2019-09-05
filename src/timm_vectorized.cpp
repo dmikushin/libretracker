@@ -38,7 +38,7 @@ TimmVectorized::TimmVectorized() : Timm()
 		goto finish;
 	}
 finish :
-	printf("instrSet = %d\n", instrSet);
+	return;
 }
 
 float* TimmVectorized::getGradients()

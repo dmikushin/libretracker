@@ -23,7 +23,9 @@ TimmMultithreaded::TimmMultithreaded() : TimmVectorized()
 	}
 
 	tbb::task_scheduler_init init(nthreads);
+#if 0
 	printf("# of threads : %d\n", nthreads);
+#endif
 }
 
 void TimmMultithreaded::pupilCenterKernel(cv::Mat& out_sum, float* gradients, int ngradients)
