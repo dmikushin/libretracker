@@ -2,6 +2,8 @@ cmake_minimum_required (VERSION 3.1)
 
 project(libretracker)
 
+set(CUDA_USE_STATIC_CUDA_RUNTIME OFF CACHE INTERNAL "")
+
 # Enable C++ 11 support
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -59,6 +61,9 @@ endif ()
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-msse4.1 SSE41_IS_SUPPORTED)
+if ("X${SSE41_IS_SUPPORTED}" STREQUAL "X")
+set(SSE41_IS_SUPPORTED 0)
+endif()
 if (${SSE41_IS_SUPPORTED})
 target_compile_definitions(${PROJECT_NAME} PRIVATE SSE41_ENABLED)
 set_source_files_properties("src/sse41_kernel.cpp" PROPERTIES COMPILE_FLAGS -msse4.1)
@@ -67,6 +72,9 @@ message(WARNING "${CMAKE_CXX_COMPILER} does not support SSE4.1, not building AVX
 endif()
 
 check_cxx_compiler_flag(-mavx AVX_IS_SUPPORTED)
+if ("X${AVX_IS_SUPPORTED}" STREQUAL "X")
+set(AVX_IS_SUPPORTED 0)
+endif()
 if (${AVX_IS_SUPPORTED})
 target_compile_definitions(${PROJECT_NAME} PRIVATE AVX_ENABLED)
 set_source_files_properties("src/avx_kernel.cpp" PROPERTIES COMPILE_FLAGS -mavx)
@@ -75,6 +83,9 @@ message(WARNING "${CMAKE_CXX_COMPILER} does not support AVX, not building AVX ke
 endif()
 
 check_cxx_compiler_flag(-mavx2 AVX2_IS_SUPPORTED)
+if ("X${AVX2_IS_SUPPORTED}" STREQUAL "X")
+set(AVX2_IS_SUPPORTED 0)
+endif()
 if (${AVX2_IS_SUPPORTED})
 target_compile_definitions(${PROJECT_NAME} PRIVATE AVX2_ENABLED)
 set_source_files_properties("src/avx2_kernel.cpp" PROPERTIES COMPILE_FLAGS -mavx2)
@@ -84,6 +95,12 @@ endif()
 
 check_cxx_compiler_flag(-march=skylake-avx512 AVX512_IS_SUPPORTED)
 check_cxx_compiler_flag(-mprefer-vector-width=512 AVX512_VECTOR_LENGTH_IS_SUPPORTED)
+if ("X${AVX512_IS_SUPPORTED}" STREQUAL "X")
+set(AVX512_IS_SUPPORTED 0)
+endif()
+if ("X${AVX512_VECTOR_LENGTH_IS_SUPPORTED}" STREQUAL "X")
+set(AVX512_VECTOR_LENGTH_IS_SUPPORTED 0)
+endif()
 if (${AVX512_IS_SUPPORTED} AND ${AVX512_VECTOR_LENGTH_IS_SUPPORTED})
 target_compile_definitions(${PROJECT_NAME} PRIVATE AVX512_ENABLED)
 set_source_files_properties("src/avx512_kernel.cpp" PROPERTIES COMPILE_FLAGS "-march=skylake-avx512 -mprefer-vector-width=512")
