@@ -61,6 +61,20 @@ This version of libretracker reads the input image series from `data/images/tria
 ./libretracker
 ```
 
+If a GPU is found, it is used by default. CPU version could be enforced explicitly:
+
+```console
+USE_CUDA=0 USE_OPENCL=0 ./libretracker
+```
+
+The CPU version is single-threaded by default, unless the `OMP_NUM_THREADS` is given:
+
+```console
+OMP_NUM_THREADS=4 USE_CUDA=0 USE_OPENCL=0 ./libretracker
+```
+
+Note libretracker's mulththreading backend is Intel TBB (not OpenMP), yet using the `OMP_NUM_THREADS` for unification.
+
 # Performance results
 
 The results below are obtained on the provided test dataset. The time values are per frame, averaged from the entire dataset.
