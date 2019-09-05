@@ -64,22 +64,30 @@ float TimmVectorized::kernel(float cx, float cy, float* gradients, int ngradient
 #else
 	switch (instrSet)
 	{
+#ifdef SSE41_ENABLED
 	case InstrSetSSE41:
 		for (size_t i = 0; i < ngradients; i += 4 * n_floats)
 			c_out += kernelOpSSE41(cx, cy, &gradients[i]);
 		break;
+#endif
+#ifdef AVX_ENABLED
 	case InstrSetAVX:
 		for (size_t i = 0; i < ngradients; i += 4 * n_floats)
 			c_out += kernelOpAVX(cx, cy, &gradients[i]);
 		break;
+#endif
+#ifdef AVX2_ENABLED
 	case InstrSetAVX2:
 		for (size_t i = 0; i < ngradients; i += 4 * n_floats)
 			c_out += kernelOpAVX2(cx, cy, &gradients[i]);
 		break;
+#endif
+#ifdef AVX512_ENABLED
 	case InstrSetAVX512F:
 		for (size_t i = 0; i < ngradients; i += 4 * n_floats)
 			c_out += kernelOpAVX512(cx, cy, &gradients[i]);
 		break;
+#endif
 #endif
 	default:
 		c_out = Timm::kernel(cx, cy, gradients, ngradients);
