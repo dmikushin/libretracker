@@ -18,28 +18,31 @@ __global__ void kernelOpGPU(int width, uint64_t out_sum_, int nout_sum, uint64_t
 	
 	for (size_t i = 0; i < ngradients; i += 4)
 	{
+#if defined(__CUDACC__)
+		float4 sd = *(float4*)&gradients[i];
+		float x  = sd.x;
+		float y  = sd.y;
+		float gx = sd.z;
+		float gy = sd.w;
+#else
 		float* sd = &gradients[i];
-
 		float x  = sd[0];
 		float y  = sd[1];
 		float gx = sd[2];
 		float gy = sd[3];
-		
+#endif	
 		float dx = x - cx;
 		float dy = y - cy;
 
-		// normalize d
-		float magnitude = (dx * dx) + (dy * dy);
-
-		magnitude = 1.0f / sqrt(magnitude);
-
-		dx = dx * magnitude;
-		dy = dy * magnitude;
-
 		float dotProduct = dx * gx + dy * gy;
-		dotProduct = max(0.0f, dotProduct);
 
-		c_out += dotProduct * dotProduct;
+		if (dotProduct > 0.0f)
+		{
+			// normalize d
+			float magnitude = (dx * dx) + (dy * dy);
+			dotProduct /= sqrt(magnitude);
+			c_out += dotProduct * dotProduct;
+		}
 	}
 	
 	out_sum[cy * width + cx] = c_out;
