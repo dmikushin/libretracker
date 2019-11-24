@@ -43,18 +43,19 @@ int main(int argc, char* argv[])
 		for (int i = 0, ie = imageFilenames.size(); i < ie; i++)
 		{
 			const string inputPath = (imagePath / imageFilenames[i]).string();
-			cv::Mat input = cv::imread(inputPath, cv::IMREAD_GRAYSCALE);
+			cv::Mat image = cv::imread(inputPath, cv::IMREAD_GRAYSCALE);
 
 			if (!pupilTracker)
 				pupilTracker.reset(new PupilTracker());
 
-			cv::Mat output;
+			cv::Point pupil_pos, pupil_pos_coarse;
 			double start; get_time(&start);
-			pupilTracker->run(input, output);
+			pupilTracker->run(image, pupil_pos, pupil_pos_coarse);
 			double finish; get_time(&finish);
+			pupilTracker->annotate(image, pupil_pos, pupil_pos_coarse);
 
 			const string outputPath = (imagePath.parent_path() / "processed" / imageFilenames[i]).string();
-			cv::imwrite(outputPath, output);
+			cv::imwrite(outputPath, image);
 
 			const double time_ms = (finish - start) * 1000;
 			printf("Processing frame \"%s\" time = %f ms\n", imageFilenames[i].c_str(), time_ms);

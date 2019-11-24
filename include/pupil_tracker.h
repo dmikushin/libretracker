@@ -15,7 +15,9 @@ public :
 
 	~PupilTracker();
 
-	void run(const cv::Mat& input, cv::Mat& output);
+	void run(const cv::Mat& image, cv::Point& pupil_pos, cv::Point& pupil_pos_coarse);
+
+	void annotate(cv::Mat& image, const cv::Point& pupil_pos, const cv::Point& pupil_pos_coarse);
 };
 
 #endif // PUPIL_TRACKER_H

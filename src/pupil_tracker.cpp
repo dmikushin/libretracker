@@ -11,8 +11,13 @@ PupilTracker::~PupilTracker()
 	delete impl;
 }
 
-void PupilTracker::run(const cv::Mat& input, cv::Mat& output)
+void PupilTracker::run(const cv::Mat& image, cv::Point& pupil_pos, cv::Point& pupil_pos_coarse)
 {
-	impl->run(input, output);
+	impl->run(image, pupil_pos, pupil_pos_coarse);
+}
+
+void PupilTracker::annotate(cv::Mat& image, const cv::Point& pupil_pos, const cv::Point& pupil_pos_coarse)
+{
+	impl->annotate(image, pupil_pos, pupil_pos_coarse);
 }
 

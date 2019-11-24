@@ -10,23 +10,25 @@ PupilTrackerImpl::PupilTrackerImpl()
 	params = set_params(opt);
 }
 
-void PupilTrackerImpl::run(const cv::Mat& input, cv::Mat& output)
+void PupilTrackerImpl::run(const cv::Mat& image, cv::Point& pupil_pos, cv::Point& pupil_pos_coarse)
 {
+	if (image.empty()) return;
+
 	opt = set_options(params);
 	timm.set_options(opt);
 
 	// Apply the classifier to the frame
-	if (!input.empty())
-	{
-		if (opt.blur > 0) { GaussianBlur(input, output, cv::Size(opt.blur, opt.blur), 0); }
+	cv::Mat input = image.clone();
+	if (opt.blur > 0) { GaussianBlur(input, input, cv::Size(opt.blur, opt.blur), 0); }
 
-		// auto[pupil_pos, pupil_pos_coarse] = ...  (structured bindings available with C++17)
-		cv::Point pupil_pos, pupil_pos_coarse;
-		std::tie(pupil_pos, pupil_pos_coarse) = timm.pupilCenter(output);
-		//pupil_pos = timm.stage1.pupilCenter(output);
-		output = input;
-		timm.visualize_frame(output, pupil_pos, pupil_pos_coarse);
-	}
+	std::tie(pupil_pos, pupil_pos_coarse) = timm.pupilCenter(input);
+}
+
+void PupilTrackerImpl::annotate(cv::Mat& image, const cv::Point& pupil_pos, const cv::Point& pupil_pos_coarse)
+{
+	if (image.empty()) return;
+
+	timm.visualize_frame(image, pupil_pos, pupil_pos_coarse);
 }
 
 PupilTrackerImpl::options_type PupilTrackerImpl::load_parameters(enum_parameter_settings s)
