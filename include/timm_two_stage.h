@@ -89,8 +89,9 @@ public :
 
 	void visualize_frame(cv::Mat& frame, cv::Point2f pupil_pos, cv::Point2f pupil_pos_coarse)
 	{
-		cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
 		auto rect = fit_rectangle(frame, pupil_pos_coarse, opt.window_width);
+
+		cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
 
 		// draw local processing rectangle
 		cv::rectangle(frame, rect, cv::Scalar(0, 0, 155));
