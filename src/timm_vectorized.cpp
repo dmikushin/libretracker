@@ -56,43 +56,26 @@ unsigned int TimmVectorized::getSIMDVectorSize()
 
 float TimmVectorized::kernel(float cx, float cy, float* gradients, int ngradients)
 {
-	float c_out = 0.0f;
-
-#ifdef __arm__
-	for (size_t i = 0; i < ngradients; i += 4 * n_floats)
-		c_out += kernelOp_arm128(cx, cy, &gradients[i]);
-#else
 	switch (instrSet)
 	{
 #ifdef SSE41_ENABLED
 	case InstrSetSSE41:
-		for (size_t i = 0; i < ngradients; i += 4 * n_floats)
-			c_out += kernelOpSSE41(cx, cy, &gradients[i]);
-		break;
+		return kernelSSE41(cx, cy, gradients, ngradients);
 #endif
 #ifdef AVX_ENABLED
 	case InstrSetAVX:
-		for (size_t i = 0; i < ngradients; i += 4 * n_floats)
-			c_out += kernelOpAVX(cx, cy, &gradients[i]);
-		break;
+		return kernelAVX(cx, cy, gradients, ngradients);
 #endif
 #ifdef AVX2_ENABLED
 	case InstrSetAVX2:
-		for (size_t i = 0; i < ngradients; i += 4 * n_floats)
-			c_out += kernelOpAVX2(cx, cy, &gradients[i]);
-		break;
+		return kernelAVX2(cx, cy, gradients, ngradients);
 #endif
 #ifdef AVX512_ENABLED
 	case InstrSetAVX512F:
-		for (size_t i = 0; i < ngradients; i += 4 * n_floats)
-			c_out += kernelOpAVX512(cx, cy, &gradients[i]);
-		break;
-#endif
+		return kernelAVX512(cx, cy, gradients, ngradients);
 #endif
 	default:
-		c_out = Timm::kernel(cx, cy, gradients, ngradients);
-		break;
+		return Timm::kernel(cx, cy, gradients, ngradients);
 	}
-	return c_out;
 }
 

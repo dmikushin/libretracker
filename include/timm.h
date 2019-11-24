@@ -48,8 +48,6 @@ class Timm
 	// Compute a floodfiling mask.
 	void floodKillEdges(cv::Mat& mask, cv::Mat &mat);
 	
-	float kernelOp(float cx, float cy, const float* sd);	
-
 protected :
 
 	virtual unsigned int getSIMDVectorSize();

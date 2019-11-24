@@ -57,40 +57,37 @@ float Timm::kernel(float cx, float cy, float* gradients, int ngradients)
 {
 	float c_out = 0.0f;
 
-	for (size_t i = 0; i < ngradients; i += 4)
-		c_out += kernelOp(cx, cy, &gradients[i]);
-
-	return c_out;
-}
-
-float Timm::kernelOp(float cx, float cy, const float* sd)
-{
-	float x  = sd[0];
-	float y  = sd[1];
-	float gx = sd[2];
-	float gy = sd[3];
-	
-	float dx = x - cx;
-	float dy = y - cy;
-
-	float dotProduct = dx * gx + dy * gy;
-	if (dotProduct > 0.0f)
+	for (int i = 0; i < ngradients; i += 4)
 	{
-		// normalize d
-		float magnitude = (dx * dx) + (dy * dy);
+		const float* sd = &gradients[i];
+
+		float x  = sd[0];
+		float y  = sd[1];
+		float gx = sd[2];
+		float gy = sd[3];
+		
+		float dx = x - cx;
+		float dy = y - cy;
+
+		float dotProduct = dx * gx + dy * gy;
+		if (dotProduct > 0.0f)
+		{
+			// normalize d
+			float magnitude = (dx * dx) + (dy * dy);
 
 #ifdef _WIN32 // currently fast_inverse_sqrt is only defined for win32
-		fast_inverse_sqrt(&magnitude, &magnitude); // MUCH FASTER !
+			fast_inverse_sqrt(&magnitude, &magnitude); // MUCH FASTER !
 #else
-		magnitude = 1.0f / sqrt(magnitude);
+			magnitude = 1.0f / sqrt(magnitude);
 #endif
 
-		dotProduct *= magnitude;
+			dotProduct *= magnitude;
 
-		return dotProduct * dotProduct;
+			c_out += dotProduct * dotProduct;
+		}
 	}
-	
-	return 0.0f;
+		
+	return c_out;
 }
 
 float Timm::calcDynamicThreshold(const cv::Mat &mat, float stdDevFactor)

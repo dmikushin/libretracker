@@ -41,52 +41,58 @@ inline float sum8_alt(__m256 x)
 	return _mm256_cvtss_f32(x);
 }
 
-float TimmVectorized::kernelOpAVX2(float cx, float cy, const float* sd)
+float TimmVectorized::kernelAVX2(float cx, float cy, float* gradients, int ngradients)
 {
-	//__declspec(align(16)) float dx[4]; // no effect - compiler seems to automatically align code		
-
 	__m256 zero = _mm256_set_ps(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f); // this should be faster
 
 	__m256 cx_sse = _mm256_set_ps(cx, cx, cx, cx, cx, cx, cx, cx);
 	__m256 cy_sse = _mm256_set_ps(cy, cy, cy, cy, cy, cy, cy, cy);
 
-	__m256 dx_in = _mm256_load_ps(sd);
-	__m256 dy_in = _mm256_load_ps(sd+8);
-	__m256 gx_in = _mm256_load_ps(sd+16);
-	__m256 gy_in = _mm256_load_ps(sd+24);
+	float c_out = 0.0f;
 
-	// calc the difference vector
-	dx_in = _mm256_sub_ps(dx_in, cx_sse);
-	dy_in = _mm256_sub_ps(dy_in, cy_sse);
+	for (int i = 0; i < ngradients; i += 4 * n_floats)
+	{
+		const float* sd = &gradients[i];
 
-	// calc the dot product	for the eight vec2f
-	// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps.
-	// This instruction computes the dot product of single precision floating point values.
-	// https://msdn.microsoft.com/en-ulibrary/bb514054(v=vs.120).aspx
-	__m256 tmp1 = _mm256_mul_ps(dx_in, dx_in);
-	__m256 tmp2 = _mm256_mul_ps(dy_in, dy_in);
-	tmp1 = _mm256_add_ps(tmp1, tmp2);
+		__m256 dx_in = _mm256_load_ps(sd);
+		__m256 dy_in = _mm256_load_ps(sd+8);
+		__m256 gx_in = _mm256_load_ps(sd+16);
+		__m256 gy_in = _mm256_load_ps(sd+24);
 
-	// now cals the reciprocal square root
-	tmp1 = _mm256_rsqrt_ps(tmp1);
+		// calc the difference vector
+		dx_in = _mm256_sub_ps(dx_in, cx_sse);
+		dy_in = _mm256_sub_ps(dy_in, cy_sse);
 
-	// now normalize by multiplying
-	dx_in = _mm256_mul_ps(dx_in, tmp1);
-	dy_in = _mm256_mul_ps(dy_in, tmp1);
+		// calc the dot product	for the eight vec2f
+		// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps.
+		// This instruction computes the dot product of single precision floating point values.
+		// https://msdn.microsoft.com/en-ulibrary/bb514054(v=vs.120).aspx
+		__m256 tmp1 = _mm256_mul_ps(dx_in, dx_in);
+		__m256 tmp2 = _mm256_mul_ps(dy_in, dy_in);
+		tmp1 = _mm256_add_ps(tmp1, tmp2);
 
-	// now calc the dot product with the gradient
-	tmp1 = _mm256_mul_ps(dx_in, gx_in);
-	tmp2 = _mm256_mul_ps(dy_in, gy_in);
-	tmp1 = _mm256_add_ps(tmp1, tmp2);
+		// now cals the reciprocal square root
+		tmp1 = _mm256_rsqrt_ps(tmp1);
 
-	// now calc the maximum // does this really help ???
-	tmp1 = _mm256_max_ps(tmp1, zero);
+		// now normalize by multiplying
+		dx_in = _mm256_mul_ps(dx_in, tmp1);
+		dy_in = _mm256_mul_ps(dy_in, tmp1);
 
-	// multiplication 
-	tmp1 = _mm256_mul_ps(tmp1, tmp1);
+		// now calc the dot product with the gradient
+		tmp1 = _mm256_mul_ps(dx_in, gx_in);
+		tmp2 = _mm256_mul_ps(dy_in, gy_in);
+		tmp1 = _mm256_add_ps(tmp1, tmp2);
 
-	return sum8(tmp1); // a tiny bit faster
-	//return sum8_alt(tmp1);
+		// now calc the maximum // does this really help ???
+		tmp1 = _mm256_max_ps(tmp1, zero);
+
+		// multiplication 
+		tmp1 = _mm256_mul_ps(tmp1, tmp1);
+
+		c_out += sum8(tmp1); // a tiny bit faster
+	}
+	
+	return c_out;
 }
 #endif // AVX2_ENABLED
 

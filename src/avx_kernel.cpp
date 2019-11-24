@@ -41,53 +41,62 @@ inline float sum8_alt(__m256 x)
 	return _mm256_cvtss_f32(x);
 }
 
-float TimmVectorized::kernelOpAVX(float cx, float cy, const float* sd)
+float TimmVectorized::kernelAVX(float cx, float cy, float* gradients, int ngradients)
 {
 	__m256 zero = _mm256_set_ps(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f); // this should be faster
 
 	__m256 cx_sse = _mm256_set_ps(cx, cx, cx, cx, cx, cx, cx, cx);
 	__m256 cy_sse = _mm256_set_ps(cy, cy, cy, cy, cy, cy, cy, cy);
 
-	__m256 dx_in = _mm256_load_ps(sd);
-	__m256 dy_in = _mm256_load_ps(sd+8);
-	__m256 gx_in = _mm256_load_ps(sd+16);
-	__m256 gy_in = _mm256_load_ps(sd+24);
+	float c_out = 0.0f;
 
-	// calc the difference vector
-	dx_in = _mm256_sub_ps(dx_in, cx_sse);
-	dy_in = _mm256_sub_ps(dy_in, cy_sse);
+	for (int i = 0; i < ngradients; i += 4 * n_floats)
+	{
+		const float* sd = &gradients[i];
+	
+		__m256 dx_in = _mm256_load_ps(sd);
+		__m256 dy_in = _mm256_load_ps(sd+8);
+		__m256 gx_in = _mm256_load_ps(sd+16);
+		__m256 gy_in = _mm256_load_ps(sd+24);
 
-	// now calc the dot product with the gradient
-	__m256 tmp1 = _mm256_mul_ps(dx_in, gx_in);
-	__m256 tmp2 = _mm256_mul_ps(dy_in, gy_in);
-	__m256 dotproduct = _mm256_add_ps(tmp1, tmp2);
+		// calc the difference vector
+		dx_in = _mm256_sub_ps(dx_in, cx_sse);
+		dy_in = _mm256_sub_ps(dy_in, cy_sse);
 
-	// if all dot products are less or equal zero, use fast path
-	tmp1 = _mm256_cmp_ps(dotproduct, zero, _CMP_GT_OQ);
-	if (_mm256_movemask_ps(tmp1) == 0)
-		return 0.0f;
+		// now calc the dot product with the gradient
+		__m256 tmp1 = _mm256_mul_ps(dx_in, gx_in);
+		__m256 tmp2 = _mm256_mul_ps(dy_in, gy_in);
+		__m256 dotproduct = _mm256_add_ps(tmp1, tmp2);
 
-	// zero out the negative dot products
-	dotproduct = _mm256_and_ps(dotproduct, tmp1);
+		// if all dot products are less or equal zero, use fast path
+		tmp1 = _mm256_cmp_ps(dotproduct, zero, _CMP_GT_OQ);
+		if (_mm256_movemask_ps(tmp1) == 0)
+			continue;
 
-	// calc the dot product	for the eight vec2f
-	// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps.
-	// This instruction computes the dot product of single precision floating point values.
-	// https://msdn.microsoft.com/en-ulibrary/bb514054(v=vs.120).aspx
-	tmp1 = _mm256_mul_ps(dx_in, dx_in);
-	tmp2 = _mm256_mul_ps(dy_in, dy_in);
-	__m256 magnitude = _mm256_add_ps(tmp1, tmp2);
+		// zero out the negative dot products
+		dotproduct = _mm256_and_ps(dotproduct, tmp1);
 
-	// now cals the reciprocal square root
-	magnitude = _mm256_rsqrt_ps(magnitude);
+		// calc the dot product	for the eight vec2f
+		// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps.
+		// This instruction computes the dot product of single precision floating point values.
+		// https://msdn.microsoft.com/en-ulibrary/bb514054(v=vs.120).aspx
+		tmp1 = _mm256_mul_ps(dx_in, dx_in);
+		tmp2 = _mm256_mul_ps(dy_in, dy_in);
+		__m256 magnitude = _mm256_add_ps(tmp1, tmp2);
 
-	// now normalize by multiplying
-	dotproduct = _mm256_mul_ps(dotproduct, magnitude);
+		// now cals the reciprocal square root
+		magnitude = _mm256_rsqrt_ps(magnitude);
 
-	// multiplication 
-	dotproduct = _mm256_mul_ps(dotproduct, dotproduct);
+		// now normalize by multiplying
+		dotproduct = _mm256_mul_ps(dotproduct, magnitude);
 
-	return sum8(dotproduct); // a tiny bit faster
+		// multiplication 
+		dotproduct = _mm256_mul_ps(dotproduct, dotproduct);
+
+		c_out += sum8(dotproduct); // a tiny bit faster
+	}
+	
+	return c_out;
 }
 #endif // AVX_ENABLED
 
