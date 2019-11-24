@@ -39,31 +39,17 @@ unsigned int Timm::scaledHeight() const { return img_scaled.rows; }
 
 cv::Point Timm::pupilCenter(const cv::Mat& eye_img)
 {
-	double t1; get_time(&t1);
-
 	preprocess(eye_img);
 
-	double t1b; get_time(&t1b);
-#ifdef _WIN32
-	_ReadWriteBarrier();
-#endif
 	float* gradients = getGradients();
 	int ngradients = prepareData(gradients);
 
 	pupilCenterKernel(out_sum, gradients, ngradients);
 
 	cv::multiply(out_sum, weight_float, out);
-#ifdef _WIN32
-	_ReadWriteBarrier(); // to avoid instruction reordering - important for accurate timings
-#endif
-	double t2b; get_time(&t2b);
-	measure_timings[1] = t2b - t1b;
 
 	cv::Point result = remap(postprocess(), eye_img.cols);
 
-	double t2; get_time(&t2);
-	measure_timings[0] = t2 - t1;
-	
 	return result;
 }
 
@@ -117,9 +103,6 @@ float Timm::calcDynamicThreshold(const cv::Mat &mat, float stdDevFactor)
 
 void Timm::preprocess(const cv::Mat& img)
 {
-#ifdef _WIN32
-	_ReadWriteBarrier();
-#endif
 	// down sample to speed up
 	cv::resize(img, img_scaled, cv::Size(opt.down_scaling_width, img.rows * float(opt.down_scaling_width) / img.cols));
 
@@ -187,9 +170,6 @@ cv::Point Timm::postprocess()
 		cv::minMaxLoc(out, NULL, &max_val, NULL, &max_point, mask);
 	}
 
-#ifdef _WIN32
-	_ReadWriteBarrier(); 
-#endif
 	return max_point;
 }
 

@@ -46,15 +46,6 @@ public :
 		stage2.opt.down_scaling_width = std::min(stage2.opt.down_scaling_width, opt.window_width);
 	}
 
-	std::array<float, 4> get_timings()
-	{
-		return std::array<float, 4>
-		{
-			stage1.measure_timings[0], stage1.measure_timings[1],
-			stage2.measure_timings[0], stage2.measure_timings[1]
-		};
-	}
-
 	// two stages: coarse estimation and local refinement of pupil center
 	std::tuple<cv::Point, cv::Point> pupilCenter(cv::Mat& frame_gray)
 	{

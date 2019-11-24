@@ -65,9 +65,6 @@ public :
 	unsigned int scaledWidth() const;
 	unsigned int scaledHeight() const;
 
-	// for timing measurements
-	float measure_timings[2] = { 0, 0 };
-	
 	Timm();
 
 	// Algorithm Parameters 
