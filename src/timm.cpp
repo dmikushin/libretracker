@@ -181,30 +181,30 @@ int Timm::prepareData(float* gradients)
 	auto gx_p = gradient_x.ptr<float>(0);
 	auto gy_p = gradient_y.ptr<float>(0);
 	float c_out = 0.0f;
-	simd_data.resize(n_floats * 4);
-	size_t k = 0;
-	for (size_t y = 0; y < gradient_x.rows; y++)
+	std::vector<float> simd_data(n_floats * 4);
+	int k = 0;
+	for (int y = 0, k = 0; y < gradient_x.rows; y++)
 	{
-		for (size_t x = 0; x < gradient_x.cols; x++)
+		for (int x = 0; x < gradient_x.cols; x++)
 		{
 			size_t idx = y * cols + x;
 			float gx = gx_p[idx];
 			float gy = gy_p[idx];
 
-			if ((gx != 0.0f || gy != 0.0f))
-			{
-				simd_data[k + 0 * n_floats] = x;
-				simd_data[k + 1 * n_floats] = y;
-				simd_data[k + 2 * n_floats] = gx;
-				simd_data[k + 3 * n_floats] = gy;
+			if ((gx == 0.0f) && (gy == 0.0f))
+				continue;
 
-				k++;
-				if (k == n_floats)
-				{
-					for (float d : simd_data)
-						gradients[ngradients++] = d;
-					k = 0;
-				}
+			simd_data[k + 0 * n_floats] = x;
+			simd_data[k + 1 * n_floats] = y;
+			simd_data[k + 2 * n_floats] = gx;
+			simd_data[k + 3 * n_floats] = gy;
+
+			k++;
+			if (k == n_floats)
+			{
+				for (float d : simd_data)
+					gradients[ngradients++] = d;
+				k = 0;
 			}
 		}
 	}

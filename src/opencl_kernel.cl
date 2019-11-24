@@ -30,7 +30,7 @@ __global__ void kernelOpGPU(int width, uint64_t out_sum_, int nout_sum, uint64_t
 		float y  = sd[1];
 		float gx = sd[2];
 		float gy = sd[3];
-#endif	
+#endif
 		float dx = x - cx;
 		float dy = y - cy;
 

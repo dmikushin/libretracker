@@ -48,7 +48,7 @@ float TimmVectorized::kernelAVX(int cx, int cy, float* gradients, int ngradients
 	__m256 cx_sse = _mm256_set_ps(cx, cx, cx, cx, cx, cx, cx, cx);
 	__m256 cy_sse = _mm256_set_ps(cy, cy, cy, cy, cy, cy, cy, cy);
 
-	float c_out = 0.0f;
+	__m256 c_out = zero;
 
 	for (int i = 0; i < ngradients; i += 4 * n_floats)
 	{
@@ -93,10 +93,10 @@ float TimmVectorized::kernelAVX(int cx, int cy, float* gradients, int ngradients
 		// multiplication 
 		dotproduct = _mm256_mul_ps(dotproduct, dotproduct);
 
-		c_out += sum8(dotproduct); // a tiny bit faster
+		c_out = _mm256_add_ps(c_out, dotproduct);
 	}
 	
-	return c_out;
+	return sum8(c_out); // a tiny bit faster
 }
 #endif // AVX_ENABLED
 

@@ -16,7 +16,7 @@ float TimmVectorized::kernelSSE41(int cx, int cy, float* gradients, int ngradien
 	__m128 cx_sse = _mm_set_ps(cx, cx, cx, cx);
 	__m128 cy_sse = _mm_set_ps(cy, cy, cy, cy);
 
-	float c_out = 0.0f;
+	__m128 c_out = zero;
 
 	for (int i = 0; i < ngradients; i += 4 * n_floats)
 	{
@@ -56,15 +56,15 @@ float TimmVectorized::kernelSSE41(int cx, int cy, float* gradients, int ngradien
 		// multiplication 
 		tmp1 = _mm_mul_ps(tmp1, tmp1);
 
-		// and finally, summation of all 4 floats
-		// two horizontal adds do the trick:)
-		tmp1 = _mm_hadd_ps(tmp1, tmp1);
-		tmp1 = _mm_hadd_ps(tmp1, tmp1);
-
-		c_out += _mm_cvtss_f32(tmp1);
+		c_out = _mm_add_ps(c_out, tmp1);
 	}
+
+	// and finally, summation of all 4 floats
+	// two horizontal adds do the trick:)
+	c_out = _mm_hadd_ps(c_out, c_out);
+	c_out = _mm_hadd_ps(c_out, c_out);
 	
-	return c_out;
+	return _mm_cvtss_f32(c_out);
 }
 #endif // SSE41_ENABLED
 

@@ -12,7 +12,6 @@ class Timm
 {
 	// this vector stores sequential chunks of floats for x, y, gx, gy
 	std::vector<float> gradients;
-	std::vector<float> simd_data;
 
 	cv::Mat gradient_x;
 	cv::Mat gradient_y;

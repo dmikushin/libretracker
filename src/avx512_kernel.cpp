@@ -16,7 +16,7 @@ float TimmVectorized::kernelAVX512(int cx, int cy, float* gradients, int ngradie
 	__m512 cx_sse = _mm512_set_ps(cx, cx, cx, cx, cx, cx, cx, cx, cx, cx, cx, cx, cx, cx, cx, cx);
 	__m512 cy_sse = _mm512_set_ps(cy, cy, cy, cy, cy, cy, cy, cy, cy, cy, cy, cy, cy, cy, cy, cy);
 
-	float c_out = 0.0f;
+	__m512 c_out = zero;
 
 	for (int i = 0; i < ngradients; i += 4 * n_floats)
 	{
@@ -58,10 +58,10 @@ float TimmVectorized::kernelAVX512(int cx, int cy, float* gradients, int ngradie
 		tmp1 = _mm512_mul_ps(tmp1, tmp1);
 
 		// summation of all 16 floats
-		c_out += _mm512_reduce_add_ps(tmp1);
+		c_out = _mm512_add_ps(c_out, tmp1);
 	}
 	
-	return c_out;
+	return _mm512_reduce_add_ps(c_out);
 }
 #endif // AVX512_ENABLED
 
