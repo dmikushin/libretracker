@@ -87,29 +87,24 @@ float Timm::kernelOp(float cx, float cy, const float* sd)
 	float dx = x - cx;
 	float dy = y - cy;
 
-	// normalize d
-	float magnitude = (dx * dx) + (dy * dy);
-
-	// very time consuming.. ? // with this 28.8 ms
-	//magnitude = sqrt(magnitude); 
-	//dx = dx / magnitude;
-	//dy = dy / magnitude;
-
-	//magnitude = fast_inverse_sqrt_quake(magnitude); // with this: 26 ms.
-	//magnitude = fast_inverse_sqrt_around_one(magnitude); // not working .. 
+	float dotProduct = dx * gx + dy * gy;
+	if (dotProduct > 0.0f)
+	{
+		// normalize d
+		float magnitude = (dx * dx) + (dy * dy);
 
 #ifdef _WIN32 // currently fast_inverse_sqrt is only defined for win32
-	fast_inverse_sqrt(&magnitude, &magnitude); // MUCH FASTER !
+		fast_inverse_sqrt(&magnitude, &magnitude); // MUCH FASTER !
 #else
-	magnitude = 1.0f / sqrt(magnitude);
+		magnitude = 1.0f / sqrt(magnitude);
 #endif
-	dx = dx * magnitude;
-	dy = dy * magnitude;
 
-	float dotProduct = dx * gx + dy * gy;
-	dotProduct = std::max(0.0f, dotProduct);
+		dotProduct *= magnitude;
 
-	return dotProduct * dotProduct;
+		return dotProduct * dotProduct;
+	}
+	
+	return 0.0f;
 }
 
 float Timm::calcDynamicThreshold(const cv::Mat &mat, float stdDevFactor)
