@@ -54,7 +54,7 @@ unsigned int TimmVectorized::getSIMDVectorSize()
 	return n_floats;
 }
 
-float TimmVectorized::kernel(float cx, float cy, float* gradients, int ngradients)
+float TimmVectorized::kernel(int cx, int cy, float* gradients, int ngradients)
 {
 	switch (instrSet)
 	{

@@ -7,7 +7,7 @@
 #endif
 
 #ifdef SSE41_ENABLED
-float TimmVectorized::kernelSSE41(float cx, float cy, float* gradients, int ngradients)
+float TimmVectorized::kernelSSE41(int cx, int cy, float* gradients, int ngradients)
 {
 	// wenn das gut klappt, dann für raspi mal die sse2neon lib anschauen: https://github.com/jratcliff63367/sse2neon
 

@@ -56,7 +56,7 @@ protected :
 
 	virtual void pupilCenterKernel(cv::Mat& out_sum, float* gradients, int ngradients);
 
-	virtual float kernel(float cx, float cy, float* gradients, int ngradients);
+	virtual float kernel(int cx, int cy, float* gradients, int ngradients);
 
 public :
 

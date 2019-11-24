@@ -53,7 +53,7 @@ cv::Point Timm::pupilCenter(const cv::Mat& eye_img)
 	return result;
 }
 
-float Timm::kernel(float cx, float cy, float* gradients, int ngradients)
+float Timm::kernel(int cx, int cy, float* gradients, int ngradients)
 {
 	float c_out = 0.0f;
 

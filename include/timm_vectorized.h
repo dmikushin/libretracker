@@ -22,16 +22,16 @@ class TimmVectorized : public Timm
 	std::vector<float, AlignedAllocator<float, Alignment::AVX512> > gradients;
 
 #ifdef SSE41_ENABLED
-	float kernelSSE41(float cx, float cy, float* gradients, int ngradients);
+	float kernelSSE41(int cx, int cy, float* gradients, int ngradients);
 #endif
 #ifdef AVX_ENABLED
-	float kernelAVX(float cx, float cy, float* gradients, int ngradients);
+	float kernelAVX(int cx, int cy, float* gradients, int ngradients);
 #endif
 #ifdef AVX2_ENABLED
-	float kernelAVX2(float cx, float cy, float* gradients, int ngradients);
+	float kernelAVX2(int cx, int cy, float* gradients, int ngradients);
 #endif
 #ifdef AVX512_ENABLED
-	float kernelAVX512(float cx, float cy, float* gradients, int ngradients);
+	float kernelAVX512(int cx, int cy, float* gradients, int ngradients);
 #endif
 
 protected :
@@ -40,7 +40,7 @@ protected :
 
 	virtual float* getGradients();
 
-	virtual float kernel(float cx, float cy, float* gradients, int ngradients);
+	virtual float kernel(int cx, int cy, float* gradients, int ngradients);
 
 public :
 

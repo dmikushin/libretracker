@@ -41,7 +41,7 @@ inline float sum8_alt(__m256 x)
 	return _mm256_cvtss_f32(x);
 }
 
-float TimmVectorized::kernelAVX(float cx, float cy, float* gradients, int ngradients)
+float TimmVectorized::kernelAVX(int cx, int cy, float* gradients, int ngradients)
 {
 	__m256 zero = _mm256_set_ps(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f); // this should be faster
 

@@ -7,7 +7,7 @@
 #endif
 
 #ifdef AVX512_ENABLED
-float TimmVectorized::kernelAVX512(float cx, float cy, float* gradients, int ngradients)
+float TimmVectorized::kernelAVX512(int cx, int cy, float* gradients, int ngradients)
 {
 	__m512 zero = _mm512_set_ps(
 		0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
