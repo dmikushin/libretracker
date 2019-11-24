@@ -4,7 +4,7 @@
 #if ENABLE_GPU
 #include "timm_gpu.h"
 #else
-#include "timm_multhreaded.h"
+#include "timm_multihreaded.h"
 #endif
 #include "helpers.h"
 
