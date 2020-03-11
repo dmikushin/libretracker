@@ -16,7 +16,6 @@ class Timm
 	cv::Mat gradient_x;
 	cv::Mat gradient_y;
 	cv::Mat img_scaled;
-	cv::Mat mags;
 	cv::Mat weight;
 	cv::Mat weight_float;
 	cv::Mat out_sum;

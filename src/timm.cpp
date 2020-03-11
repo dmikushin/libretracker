@@ -109,7 +109,7 @@ void Timm::preprocess(const cv::Mat& img)
 	cv::Sobel(img_scaled, gradient_y, CV_32F, 0, 1, opt.sobel);
 	
 	// compute all the magnitudes 0.01ms
-	mags = gradient_x.mul(gradient_x) + gradient_y.mul(gradient_y);
+	cv::Mat mags = gradient_x.mul(gradient_x) + gradient_y.mul(gradient_y);
 	sqrt(mags, mags); // is sqrt really necessary ??
 
 	//-- Normalize and threshold the gradient
