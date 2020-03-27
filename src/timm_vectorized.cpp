@@ -38,6 +38,9 @@ TimmVectorized::TimmVectorized() : Timm()
 		goto finish;
 	}
 finish :
+#if 1
+	printf("Using vectorized version with vector size = %d\n", n_floats);
+#endif
 	return;
 }
 

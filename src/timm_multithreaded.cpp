@@ -24,8 +24,8 @@ TimmMultithreaded::TimmMultithreaded() : TimmVectorized()
 
 	// TODO Must be alive during the whole application scope, in order to have effect!
 	tbb::task_scheduler_init init(nthreads);
-#if 0
-	printf("# of threads : %d\n", nthreads);
+#if 1
+	printf("Using # of threads : %d\n", nthreads);
 #endif
 }
 
