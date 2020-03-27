@@ -27,7 +27,6 @@ float TimmVectorized::kernelSSE41(int cx, int cy, float* gradients, int ngradien
 		__m128 gx_in = _mm_load_ps(sd+8);
 		__m128 gy_in = _mm_load_ps(sd+12);
 
-
 		// calc the dot product	for the four vec2f
 		// Emits the Streaming SIMD Extensions 4 (SSE4) instruction dpps.
 		// This instruction computes the dot product of single precision floating point values.
@@ -39,16 +38,16 @@ float TimmVectorized::kernelSSE41(int cx, int cy, float* gradients, int ngradien
 		tmp1 = _mm_add_ps(tmp1, tmp2);
 		
 		// now cals the reciprocal square root
-		tmp1 = _mm_rsqrt_ps(tmp1);
+		tmp1 = _mm_rcp_ps(tmp1);
 		
+		// now calc the dot product with the gradient
+		dx_in = _mm_mul_ps(dx_in, gx_in);
+		dy_in = _mm_mul_ps(dy_in, gy_in);
+
 		// now normalize by multiplying
 		dx_in = _mm_mul_ps(dx_in, tmp1);
 		dy_in = _mm_mul_ps(dy_in, tmp1);
-
-		// now calc the dot product with the gradient
-		tmp1 = _mm_mul_ps(dx_in, gx_in);
-		tmp2 = _mm_mul_ps(dy_in, gy_in);
-		tmp1 = _mm_add_ps(tmp1, tmp2);
+		tmp1 = _mm_add_ps(dx_in, dy_in);
 
 		// now calc the maximum // does this really help ???
 		tmp1 = _mm_max_ps(tmp1, zero);

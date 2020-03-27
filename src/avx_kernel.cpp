@@ -85,13 +85,13 @@ float TimmVectorized::kernelAVX(int cx, int cy, float* gradients, int ngradients
 		__m256 magnitude = _mm256_add_ps(tmp1, tmp2);
 
 		// now cals the reciprocal square root
-		magnitude = _mm256_rsqrt_ps(magnitude);
-
-		// now normalize by multiplying
-		dotproduct = _mm256_mul_ps(dotproduct, magnitude);
+		magnitude = _mm256_rcp_ps(magnitude);
 
 		// multiplication 
 		dotproduct = _mm256_mul_ps(dotproduct, dotproduct);
+
+		// now normalize by multiplying
+		dotproduct = _mm256_mul_ps(dotproduct, magnitude);
 
 		c_out = _mm256_add_ps(c_out, dotproduct);
 	}

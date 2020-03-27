@@ -1,7 +1,6 @@
 #include "timm.h"
 #include "timing.h"
 #include "eigenlab.h"
-#include "fast_sqrt.h"
 #include "filters.h"
 #include "eigen_pseudoinverse.h"
 
@@ -74,16 +73,8 @@ float Timm::kernel(int cx, int cy, float* gradients, int ngradients)
 		{
 			// normalize d
 			float magnitude = (dx * dx) + (dy * dy);
-
-#ifdef _WIN32 // currently fast_inverse_sqrt is only defined for win32
-			fast_inverse_sqrt(&magnitude, &magnitude); // MUCH FASTER !
-#else
-			magnitude = 1.0f / sqrt(magnitude);
-#endif
-
-			dotProduct *= magnitude;
-
-			c_out += dotProduct * dotProduct;
+			magnitude = 1.0f / magnitude;
+			c_out += dotProduct * dotProduct * magnitude;
 		}
 	}
 		

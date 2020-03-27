@@ -72,16 +72,16 @@ float TimmVectorized::kernelAVX2(int cx, int cy, float* gradients, int ngradient
 		tmp1 = _mm256_add_ps(tmp1, tmp2);
 
 		// now cals the reciprocal square root
-		tmp1 = _mm256_rsqrt_ps(tmp1);
+		tmp1 = _mm256_rcp_ps(tmp1);
+
+		// now calc the dot product with the gradient
+		dx_in = _mm256_mul_ps(dx_in, gx_in);
+		dy_in = _mm256_mul_ps(dy_in, gy_in);
 
 		// now normalize by multiplying
 		dx_in = _mm256_mul_ps(dx_in, tmp1);
 		dy_in = _mm256_mul_ps(dy_in, tmp1);
-
-		// now calc the dot product with the gradient
-		tmp1 = _mm256_mul_ps(dx_in, gx_in);
-		tmp2 = _mm256_mul_ps(dy_in, gy_in);
-		tmp1 = _mm256_add_ps(tmp1, tmp2);
+		tmp1 = _mm256_add_ps(dx_in, dy_in);
 
 		// now calc the maximum // does this really help ???
 		tmp1 = _mm256_max_ps(tmp1, zero);

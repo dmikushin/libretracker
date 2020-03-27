@@ -40,8 +40,8 @@ __global__ void kernelOpGPU(int width, uint64_t out_sum_, int nout_sum, uint64_t
 		{
 			// normalize d
 			float magnitude = (dx * dx) + (dy * dy);
-			dotProduct *= rsqrt(magnitude);
-			c_out += dotProduct * dotProduct;
+			magnitude = 1.0 / magnitude;
+			c_out += dotProduct * dotProduct * magnitude;
 		}
 	}
 	
